@@ -122,8 +122,10 @@
        `<select onchange="handleChange()">
           <option value="B">B</option>
           <option value="M">M</option>
-          <option value="E">E</option>
         </select>`;
+
+       // <option value="E">E</option> removed
+       
       row.appendChild(locationCell);
 
       // Mean
@@ -162,22 +164,10 @@
     // DEBUG PRINT STATEMENT
     function handleChange() {
 
-      const results = mainTablePrint(mainTable);
-
-      const other = smallTablePrint(smallTable);
-
-      const avgsDetect = averageColumn(mainTable, colDetect);
-      const avgsMean = averageColumn(mainTable, colMean);
-      const avgsDeviation = averageColumn(mainTable, colDeviation);
+      const results = tablePrint(mainTable);
 
       document.getElementById("output").textContent =
         "(The following is just for testing that inputs pass through and update live)\n" +
-        "\nAverage P(Detection): " + avgsDetect +
-        "\nAverage Mean: " + avgsMean +
-        "\nStandard Deviation: " + avgsDeviation +
-        "\n-----------------------\n" + 
-        other +
-        "\n-----------------------\n" + 
         results.join("\n");
     }
 
