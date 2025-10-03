@@ -353,8 +353,9 @@ function CalculateTaskProbabilityOfInterruption(FirstDetection, CDF_Probability)
 // This is the last 'core' function that ties everything together.
 // It calculates the Overall Probability of Interruption.
 
-function CalculateOverallProbabilityOfInterruption() {
-
+function CalculateOverallProbabilityOfInterruption(SumOfInterruption, GuardCommunication) {
+    let OverallProbabilityOfInterruption = SumOfInterruption * GuardCommunication;
+    return OverallProbabilityOfInterruption;
 }
 
 
@@ -364,13 +365,13 @@ function tablePrint(mainTable) {
 
     let row = smallTable.rows[0];
     // Front End Values (Direct Inputs of upper table)
-    const guardComms = row.cells [1].querySelector("input").value
+    const GuardCommunication = row.cells [1].querySelector("input").value
     const PAssessment = row.cells [2].querySelector("input").value;
     const PTransmission = row.cells [3].querySelector("input").value;
     const GuardResponseMean = row.cells [4].querySelector("input").value;
     const GuardResponse_SDev = row.cells [5].querySelector("input").value;
 
-    results.push(`Guard Comms: ${guardComms}, P(A): ${PAssessment}, P(T): ${PTransmission}, Response Mean: ${GuardResponseMean}, Force Time: ${GuardResponse_SDev}\n`);
+    results.push(`Guard Comms: ${GuardCommunication}, P(A): ${PAssessment}, P(T): ${PTransmission}, Response Mean: ${GuardResponseMean}, Force Time: ${GuardResponse_SDev}\n`);
     results.push(`-----------------------`);
 
 6
@@ -385,7 +386,7 @@ function tablePrint(mainTable) {
     const CumulativeDelay_Marker = new Array(n);
 
     let NextCumulativeDelay = 0;
-    for (i = n - 1; i >= 0; i--) {
+    for (let i = n - 1; i >= 0; i--) {
         NextCumulativeDelay_Marker[i] = NextCumulativeDelay;
         const cd = CalculateCumulativeDelay(DelayMeanArray[i], NextCumulativeDelay);
         CumulativeDelay_Marker[i] = cd;
@@ -399,7 +400,7 @@ function tablePrint(mainTable) {
     const CumulativeVariance_Marker = new Array(n);
 
     let NextCumulativeVariance = 0;
-    for (i = n - 1; i >= 0; i--) {
+    for (let i = n - 1; i >= 0; i--) {
         NextCumulativeVariance_Marker[i] = NextCumulativeVariance;
         const cd = CalculateCumulativeVariance(VarianceArray[i], NextCumulativeVariance);
         CumulativeVariance_Marker[i] = cd;
@@ -410,6 +411,7 @@ function tablePrint(mainTable) {
 
     // Initialisers
     let PreviousPoMD = 1;
+    let SumOfInterruption = 0;
 
     rows.forEach((row, index) => {
 
@@ -443,23 +445,27 @@ function tablePrint(mainTable) {
 
         const TrueVariance = CalculateTrueVariance(locationTiming, Delay_SDev, NextCumulativeVariance);
 
-        // const Z_Value = Calculate_Z_Value(TrueMean, TrueVariance, GuardResponseMean, GuardResponse_SDev);
+        const Z_Value = Calculate_Z_Value(TrueMean, TrueVariance, GuardResponseMean, GuardResponse_SDev);
 
-        // const CDF_Probability = CumulativeDistributionFunction(Z_Value);
+        const CDF_Probability = CumulativeDistributionFunction(Z_Value);
 
-        // const TaskProbabilityOfInterruption = CalculateTaskProbabilityOfInterruption(FirstDetection, CDF_Probability);
+        const TaskProbabilityOfInterruption = CalculateTaskProbabilityOfInterruption(FirstDetection, CDF_Probability);
 
     
         results.push(`Adjusted P(d): ${AdjustedDetection}, Miss Detection: ${MissedDetection}, First Detection: ${FirstDetection}\n`);
         results.push(`Cumulative Delays: ${CumulativeDelay}, Cumulative Var: ${CumulativeVariance}, True Mean: ${TrueMean}, True Var: ${TrueVariance}\n`);
-        // results.push(`z-values: ${Z_Value}, Normal Values: ${CDF_Probability}, prod h?*n?: ${TaskProbabilityOfInterruption}`);
+        results.push(`Z-Value: ${Z_Value}, Normal Value: ${CDF_Probability}, Task Interruption Probability: ${TaskProbabilityOfInterruption}`);
         
         results.push(`-----------------------`);
 
         // Update values for NEXT loop / row
-        PreviousPoMD *= MissedDetection
+        PreviousPoMD *= MissedDetection;
+        SumOfInterruption += TaskProbabilityOfInterruption;
         
     });
+
+    const OverallProbabilityOfInterruption = CalculateOverallProbabilityOfInterruption(SumOfInterruption, GuardCommunication);
+    results.push(`PROBABILITY OF INTERRUPTION: ${OverallProbabilityOfInterruption}`)
 
     return results;
 }
