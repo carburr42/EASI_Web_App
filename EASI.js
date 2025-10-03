@@ -109,22 +109,22 @@ function CalculateCumulativeDelay(DelayMean, NextCumulativeDelay) {
 // ## 5 ##   ## Cumulative Variance ##
 // #######   #########################
 
-// This function calculates the cumulative variance/variation of all tasks
-// In this scenario, variation is the measurement of how much task times can differ from the average
+// This function calculates the cumulative variance/variance of all tasks
+// In this scenario, variance is the measurement of how much task times can differ from the average
 // Input/parameters:
 //    – Delay_SDev: The Standard Deviation of Delay Time
-//    – NextCumulativeVariation (The cumulative variation time (in seconds) for the next task)
+//    – NextCumulativeVariance (The cumulative variance time (in seconds) for the next task)
 // Calculation/Formula:
-//    i) Cumulative Variance Time = (Delay_SDev x Delay_SDev) + NextCumulativeVariation
+//    i) Cumulative Variance Time = (Delay_SDev x Delay_SDev) + NextCumulativeVariance
 
-function CalculateCumulativeVariance(Delay_SDev, NextCumulativeVariation) {
+function CalculateCumulativeVariance(Delay_SDev, NextCumulativeVariance) {
     // "parseFloat" converts the input(s) to a number.
     // if the input is blank the function argument assigns a value:
     //     i) "|| 0" assigns a value of 0
     Delay_SDev = parseFloat(Delay_SDev) || 0;
-    NextCumulativeVariation = parseFloat(NextCumulativeVariation) || 0;
+    NextCumulativeVariance = parseFloat(NextCumulativeVariance) || 0;
     // Calculation/Formula
-    let CumulativeVariance = (Delay_SDev * Delay_SDev) + NextCumulativeVariation;
+    let CumulativeVariance = (Delay_SDev * Delay_SDev) + NextCumulativeVariance;
     // Return Cumulative Variance
     return CumulativeVariance;
 }
@@ -187,8 +187,8 @@ function CalculateTrueMean(locationTiming, DelayMean, NextCumulativeDelay) {
 // ## 7 ##   ## True Variance ##
 // #######   ###################
 
-// The purpose of this function is to determine the 'true' variation of delay times (cumulative).
-// In this scenario, variation is the measurement of how much task times can differ from the average
+// The purpose of this function is to determine the 'true' variance of delay times (cumulative).
+// In this scenario, variance is the measurement of how much task times can differ from the average
 // Input/parameters:
 //     – Timing: At what point during the step are guards notified of the adversary's action?
 //         i) B for Beggining
@@ -213,7 +213,7 @@ function CalculateTrueVariance(locationTiming, Delay_SDev, NextCumulativeVarianc
     // if the input is blank the function argument assigns a value:
     //     i) "|| 0" assigns a value of 0
     Delay_SDev = parseFloat(Delay_SDev) || 0;
-    NextCumulativeDelay = parseFloat(NextCumulativeDelay) || 0;
+    NextCumulativeVariance = parseFloat(NextCumulativeVariance) || 0;
     // Set the default Timing Weight to 0
     let weight = 0;
     // If the Timing is "B" (Beginning) set the weight to 1
@@ -224,7 +224,7 @@ function CalculateTrueVariance(locationTiming, Delay_SDev, NextCumulativeVarianc
     else weight = 0;
     // Calculate the variance of the current task
     let CurrentTaskVariance = Delay_SDev * Delay_SDev;
-    // Apply the timing weight to the variation
+    // Apply the timing weight to the variance
     let TrueVariance = ((weight * weight) * CurrentTaskVariance) + NextCumulativeVariance;
     // Return the True Variance value
     return TrueVariance;
@@ -238,12 +238,12 @@ function CalculateTrueVariance(locationTiming, Delay_SDev, NextCumulativeVarianc
 // This value tells us how far ahead or behind the attacker is in relation to the guards.
 // Input/parameters:
 //    – TrueMean: the average delay time accounting for detection timing
-//    — TrueVariance: the variance/variation time of tasks accounting for detection timing
+//    — TrueVariance: the variance/variance time of tasks accounting for detection timing
 //    – GuardResponseMean: the average response time for guards to arrive
 //    – GuardResponse_SDev: the Standard Deviation of the response time
-//        i) GuardResponseVariation = GuardResponse_SDev x GuardResponse_SDev
+//        i) GuardResponseVariance = GuardResponse_SDev x GuardResponse_SDev
 // Calculation/Formula:
-//    i) Z = (GuardResponseMean - TrueMean) / Square Root(GuardResponseVariation + TrueVariance)
+//    i) Z = (GuardResponseMean - TrueMean) / Square Root(GuardResponseVariance + TrueVariance)
 
 function Calculate_Z_Value(TrueMean, TrueVariance, GuardResponseMean, GuardResponse_SDev) {
     // "parseFloat" converts the input(s) to a number.
@@ -253,11 +253,11 @@ function Calculate_Z_Value(TrueMean, TrueVariance, GuardResponseMean, GuardRespo
     TrueVariance = parseFloat(TrueVariance) || 0;
     GuardResponseMean = parseFloat(GuardResponseMean) || 0;
     GuardResponse_SDev = parseFloat(GuardResponse_SDev) || 0;
-    // Formula for calculating Guard Response Variation
-    let GuardResponseVariation = GuardResponse_SDev * GuardResponse_SDev;
+    // Formula for calculating Guard Response Variance
+    let GuardResponseVariance = GuardResponse_SDev * GuardResponse_SDev;
     // Formula for calculating the latter half of the equation 
-    //    i) Square Root(GuardResponseVariation + CumulativeVariance)
-    let Formula_Division = Math.sqrt(GuardResponseVariation + TrueVariance);
+    //    i) Square Root(GuardResponseVariance + CumulativeVariance)
+    let Formula_Division = Math.sqrt(GuardResponseVariance + TrueVariance);
     // Final formula
     let Z_Value = (GuardResponseMean - TrueMean) / Formula_Division;
     // Return Z Value
@@ -373,19 +373,54 @@ function tablePrint(mainTable) {
     results.push(`Guard Comms: ${guardComms}, P(A): ${PAssessment}, P(T): ${PTransmission}, Response Mean: ${GuardResponseMean}, Force Time: ${GuardResponse_SDev}\n`);
     results.push(`-----------------------`);
 
+6
+    // BACKWARDS PASSING (For "next" loop/row values)
+    const rows = [...mainTable.rows];
+    const n = rows.length;
+
+    // Delay Mean
+    const DelayMeanArray = rows.map(r => parseFloat(r.cells[4].querySelector("input").value) || 0);
+
+    const NextCumulativeDelay_Marker = new Array(n);
+    const CumulativeDelay_Marker = new Array(n);
+
+    let NextCumulativeDelay = 0;
+    for (i = n - 1; i >= 0; i--) {
+        NextCumulativeDelay_Marker[i] = NextCumulativeDelay;
+        const cd = CalculateCumulativeDelay(DelayMeanArray[i], NextCumulativeDelay);
+        CumulativeDelay_Marker[i] = cd;
+        NextCumulativeDelay = cd;
+    }
+
+    // Delay S_Dev
+    const VarianceArray = rows.map(r => parseFloat(r.cells[5].querySelector("input").value) || 0);
+
+    const NextCumulativeVariance_Marker = new Array(n);
+    const CumulativeVariance_Marker = new Array(n);
+
+    let NextCumulativeVariance = 0;
+    for (i = n - 1; i >= 0; i--) {
+        NextCumulativeVariance_Marker[i] = NextCumulativeVariance;
+        const cd = CalculateCumulativeVariance(VarianceArray[i], NextCumulativeVariance);
+        CumulativeVariance_Marker[i] = cd;
+        NextCumulativeVariance = cd;
+    }
+
+
+
     // Initialisers
     let PreviousPoMD = 1;
 
-    [...mainTable.rows].forEach((row, index) => {
+    rows.forEach((row, index) => {
 
         // Front End Values (Direct Inputs)
         const PDetection = row.cells[2].querySelector("input").value;
 
         const locationTiming = row.cells[3].querySelector("select").value;
 
-        const DelayMean = row.cells[4].querySelector("input").value;
+        const DelayMean = DelayMeanArray[index]; 
 
-        const Delay_SDev = row.cells[5].querySelector("input").value;
+        const Delay_SDev = VarianceArray[index]; 
 
 
         results.push(`R O W  ${index + 1} :\n`);
@@ -398,13 +433,15 @@ function tablePrint(mainTable) {
 
         const FirstDetection = FirstPointOfDetection(AdjustedDetection, PreviousPoMD);
 
-        // const CumulativeDelay = CalculateCumulativeDelay(DelayMean, NextCumulativeDelay);
+        const NextCumulativeDelay = NextCumulativeDelay_Marker[index];
+        const CumulativeDelay = CalculateCumulativeDelay(DelayMean, NextCumulativeDelay);
 
-        // const CumulativeVariance = CalculateCumulativeVariance(Delay_SDev, NextCumulativeVariation);
+        const NextCumulativeVariance = NextCumulativeVariance_Marker[index];
+        const CumulativeVariance = CalculateCumulativeVariance(Delay_SDev, NextCumulativeVariance);
 
-        // const TrueMean = CalculateTrueMean(locationTiming, DelayMean, NextCumulativeDelay);
+        const TrueMean = CalculateTrueMean(locationTiming, DelayMean, NextCumulativeDelay);
 
-        // const TrueVariance = CalculateTrueVariance(locationTiming, Delay_SDev, NextCumulativeVariance);
+        const TrueVariance = CalculateTrueVariance(locationTiming, Delay_SDev, NextCumulativeVariance);
 
         // const Z_Value = Calculate_Z_Value(TrueMean, TrueVariance, GuardResponseMean, GuardResponse_SDev);
 
@@ -414,7 +451,7 @@ function tablePrint(mainTable) {
 
     
         results.push(`Adjusted P(d): ${AdjustedDetection}, Miss Detection: ${MissedDetection}, First Detection: ${FirstDetection}\n`);
-        // results.push(`Sum Delays: ${CumulativeDelay}, Sum Var: ${CumulativeVariance}, True Mean: ${TrueMean}, True Var: ${TrueVariance}\n`);
+        results.push(`Cumulative Delays: ${CumulativeDelay}, Cumulative Var: ${CumulativeVariance}, True Mean: ${TrueMean}, True Var: ${TrueVariance}\n`);
         // results.push(`z-values: ${Z_Value}, Normal Values: ${CDF_Probability}, prod h?*n?: ${TaskProbabilityOfInterruption}`);
         
         results.push(`-----------------------`);
