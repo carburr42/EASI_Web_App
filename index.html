@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 
+<!-- EASI.js REFERENCE -->
+<script src="EASI.js"></script>
+
 <head>
   <title>EASI Web App</title>
 
@@ -78,14 +81,18 @@
 
   <br>
 
+  <table><tbody><tr>
+        <th>Probability of Interruption:</th>
+        <th id="EASIresult"></th>
+  </tr></tbody></table>
+
+  <br>
+
   <!-- Table modifying buttons -->
   <button onclick="addRow()">+</button>
   <button onclick="removeRow()">-</button>
 
   <pre id="output"></pre>
-
-  <!-- EASI.js REFERENCE -->
-  <script src="EASI.js"></script>
 
   <script>
     const mainTable = document.getElementById("mainTable");
@@ -163,6 +170,12 @@
       document.getElementById("output").textContent =
         "(The following is just for testing that inputs pass through and update live)\n" +
         results.join("\n");
+
+      const ProbabilityOfInterruption = CalculateEASI(mainTable)
+
+      document.getElementById("EASIresult").textContent =                                           // Rounds to 6 decimal places currently.
+        Number.isFinite(ProbabilityOfInterruption) ? Math.max(0, Math.min(1, ProbabilityOfInterruption)).toFixed(6) : " ";
+
     }
 
     // Set Default row count to 12 <- SHOULD BE 12 (set to 3 for now)

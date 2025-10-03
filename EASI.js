@@ -469,3 +469,97 @@ function tablePrint(mainTable) {
 
     return results;
 }
+
+function CalculateEASI(mainTable) {
+    let results = [];
+
+    let row = smallTable.rows[0];
+    // Front End Values (Direct Inputs of upper table)
+    const GuardCommunication = row.cells [1].querySelector("input").value
+    const PAssessment = row.cells [2].querySelector("input").value;
+    const PTransmission = row.cells [3].querySelector("input").value;
+    const GuardResponseMean = row.cells [4].querySelector("input").value;
+    const GuardResponse_SDev = row.cells [5].querySelector("input").value;
+6
+    // BACKWARDS PASSING (For "next" loop/row values)
+    const rows = [...mainTable.rows];
+    const n = rows.length;
+
+    // Delay Mean
+    const DelayMeanArray = rows.map(r => parseFloat(r.cells[4].querySelector("input").value) || 0);
+
+    const NextCumulativeDelay_Marker = new Array(n);
+    const CumulativeDelay_Marker = new Array(n);
+
+    let NextCumulativeDelay = 0;
+    for (let i = n - 1; i >= 0; i--) {
+        NextCumulativeDelay_Marker[i] = NextCumulativeDelay;
+        const cd = CalculateCumulativeDelay(DelayMeanArray[i], NextCumulativeDelay);
+        CumulativeDelay_Marker[i] = cd;
+        NextCumulativeDelay = cd;
+    }
+
+    // Delay S_Dev
+    const VarianceArray = rows.map(r => parseFloat(r.cells[5].querySelector("input").value) || 0);
+
+    const NextCumulativeVariance_Marker = new Array(n);
+    const CumulativeVariance_Marker = new Array(n);
+
+    let NextCumulativeVariance = 0;
+    for (let i = n - 1; i >= 0; i--) {
+        NextCumulativeVariance_Marker[i] = NextCumulativeVariance;
+        const cd = CalculateCumulativeVariance(VarianceArray[i], NextCumulativeVariance);
+        CumulativeVariance_Marker[i] = cd;
+        NextCumulativeVariance = cd;
+    }
+
+
+
+    // Initialisers
+    let PreviousPoMD = 1;
+    let SumOfInterruption = 0;
+
+    rows.forEach((row, index) => {
+
+        // Front End Values (Direct Inputs)
+        const PDetection = row.cells[2].querySelector("input").value;
+
+        const locationTiming = row.cells[3].querySelector("select").value;
+
+        const DelayMean = DelayMeanArray[index]; 
+
+        const Delay_SDev = VarianceArray[index]; 
+
+        // Back End Values (Function Calculations)
+        const AdjustedDetection = AdjustedProbabilityOfDetection(PDetection, PAssessment, PTransmission);
+
+        const MissedDetection = ProbabilityOfMissedDetection(AdjustedDetection);
+
+        const FirstDetection = FirstPointOfDetection(AdjustedDetection, PreviousPoMD);
+
+        const NextCumulativeDelay = NextCumulativeDelay_Marker[index];
+        const CumulativeDelay = CalculateCumulativeDelay(DelayMean, NextCumulativeDelay);
+
+        const NextCumulativeVariance = NextCumulativeVariance_Marker[index];
+        const CumulativeVariance = CalculateCumulativeVariance(Delay_SDev, NextCumulativeVariance);
+
+        const TrueMean = CalculateTrueMean(locationTiming, DelayMean, NextCumulativeDelay);
+
+        const TrueVariance = CalculateTrueVariance(locationTiming, Delay_SDev, NextCumulativeVariance);
+
+        const Z_Value = Calculate_Z_Value(TrueMean, TrueVariance, GuardResponseMean, GuardResponse_SDev);
+
+        const CDF_Probability = CumulativeDistributionFunction(Z_Value);
+
+        const TaskProbabilityOfInterruption = CalculateTaskProbabilityOfInterruption(FirstDetection, CDF_Probability);
+
+        // Update values for NEXT loop / row
+        PreviousPoMD *= MissedDetection;
+        SumOfInterruption += TaskProbabilityOfInterruption;
+        
+    });
+
+    const OverallProbabilityOfInterruption = CalculateOverallProbabilityOfInterruption(SumOfInterruption, GuardCommunication);
+
+    return OverallProbabilityOfInterruption;
+}
