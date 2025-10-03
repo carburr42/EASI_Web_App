@@ -23,6 +23,7 @@
     }
   </style>
 
+  <p style="text-align:left; border:none; font-style:italic; font-size:19px;">Estimate of Adversary Sequence Interruption</p>
 
 </head>
 
@@ -31,27 +32,21 @@
   <table>
 
     <thead>
-      <!-- TITLE (Aligned in a cell) -->
-      <th class="invis"></th>
-      <th style="text-align:left; border:none; font-style:italic; font-size:19px;">
-        Estimate of<br>
-        Adversary<br>
-        Sequence<br>
-        Interruption
-      </th>
-
       <!-- Headings for SMALLER TABLE -->
+      <th class="invis"></th>  
       <th>Probability of Guard Communication:</th>
-      <th></th>
+      <th>P(Assessment):</th>
+      <th>P(Transmission):</th>
       <th>Response Mean:</th>
       <th>Force Time (in Seconds) Standard Deviation:</th>
     </thead>
 
     <!-- SMALLER TABLE CONTENTS -->
     <tbody id="smallTable">
-      <th class="invis" colspan="2"></th>
+      <th class="invis"></th>
       <td><input type="number" placeholder="????" min="0" max="1" step="0.01" onchange="handleChange()"></td>
-      <td></td>
+      <td><input type="number" placeholder="????" min="0" max="1" step="0.01" onchange="handleChange()"></td>
+      <td><input type="number" placeholder="????" min="0" max="1" step="0.01" onchange="handleChange()"></td>
       <td><input type="number" placeholder="????" min="0" step="1" onchange="handleChange()"></td>
       <td><input type="number" placeholder="????" min="0" step="0.1" onchange="handleChange()"></td>
     </tbody>
@@ -122,9 +117,8 @@
        `<select onchange="handleChange()">
           <option value="B">B</option>
           <option value="M">M</option>
+          <option value="E">E</option>
         </select>`;
-
-       // <option value="E">E</option> removed
        
       row.appendChild(locationCell);
 
@@ -171,8 +165,8 @@
         results.join("\n");
     }
 
-    // Set Default row count to 12
-    for (let i = 0; i < 12; i++) {
+    // Set Default row count to 12 <- SHOULD BE 12 (set to 3 for now)
+    for (let i = 0; i < 3; i++) {
       addRow();
     }
   </script>

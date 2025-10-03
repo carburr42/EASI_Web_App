@@ -1,100 +1,360 @@
-function calcScaling(detection) {
-    // "Pd (scaling)" ???
-    scalingFactor = 1; // Setting the factor inside this function for now
+// #######   #######################################
+// ## 1 ##   ## Adjusted Probability of Detection ##
+// #######   #######################################
 
-    // INSERT LOGIC HERE
-    scaling = 0;
+// The purpose of this function is to return an adjusted probability of detection.
+// This is achieved by applying external factors of reliability to the original probability of detection P(D)
+// Input/parameters:
+//    – P(D) = Probability of Detection
+//    – P(A) = Probability of Assessment
+//    – P(T) = Probability of Transmission
+// Calculation/Formula:
+//    i) Adjusted Probability of Detection = P(D) x P(A) x P(T)
 
-    return scaling; // <- rename appropriately if needed
+function AdjustedProbabilityOfDetection(PD, PA, PT) {
+    // "parseFloat" converts the inputs to numbers.
+    // If the input is blank the function argument assigns a value:
+    //    i) "|| 0" assigns a value of 0
+    //    ii) "|| 1" assigns a value of 1
+    // Parameters:
+    //    – PD = Probability of Detection
+    //    – PA = Probability of Assessment
+    //    – PT = Probability of Transmission
+    PD = parseFloat(PD) || 0;
+    PA = parseFloat(PA) || 1;
+    PT = parseFloat(PT) || 1;
+    // Formula/Caluculation
+    return PD * PA * PT;
 }
 
-function calcMiss(scaling) {
-    // "1 - Pd" probability that the adversary wont be detected.
 
-    // INSERT LOGIC HERE
-    // (You will need to figure out how to pass previous values)
-    miss = 1;
-    
-    return miss; // <- rename appropriately if needed
+// #######   #####################################
+// ## 2 ##   ## Probability of Missed Detection ##
+// #######   #####################################
+
+// This function calculates the overall probability that an adversary will perform a task without being detected.
+// Calculation/Formula:
+//    i) = Probability of Missed Detection = 1 - Adjusted Probability of Detection
+// For example:
+//    – if AdjustedDetection = 0.75 (80%)
+//      then MissedDetection = 1 - 0.75 = 0.25 (25% Probability of Missed Detection)
+
+function ProbabilityOfMissedDetection(AdjustedDetection) {
+    // "parseFloat" converts the input(s) to a number.
+    // if the input is blank the function argument assigns a value:
+    //     i) "|| 0" assigns a value of 0
+    AdjustedDetection = parseFloat(AdjustedDetection) || 0;
+    //Calculation/Formula
+    let MissedDetection = 1 - AdjustedDetection;
+    // Return the Probability of Missed Detection
+    return MissedDetection;
 }
 
-function calcFirstPoint(scaling) {
 
-    // "P(first detn)" probability that a given task is the frst point of detection
+// #######   #############################################
+// ## 3 ##   ## Probability of First Point of Detection ##
+// #######   #############################################
 
-    // INSERT LOGIC HERE
-    firstPoint = 2;
-    
-    return firstPoint; // <- rename appropriately if needed
+// This function calculates the probability that a given task is the first point of detection.
+// Input/parameters:
+//    — AdjustedDetection: Adjusted Probability of Detection
+//    — PreviousPoMD: The probability of missed detection from the previous task
+// Calculation/Formula:
+//    i) Probability of First Point of Detection = AdjustedDetection x PreviousPoMD
+
+function FirstPointOfDetection(AdjustedDetection, PreviousPoMD) {
+    // "parseFloat" converts the input(s) to a number.
+    // if the input is blank the function argument assigns a value:
+    //     i) "|| 0" assigns a value of 0
+    AdjustedDetection = parseFloat(AdjustedDetection) || 0;
+    PreviousPoMD = parseFloat(PreviousPoMD) || 0;
+    // Calculation/Formula
+    let FirstDetection = AdjustedDetection * PreviousPoMD;
+    // Return the Probability of First Point of Detection
+    return FirstDetection;
 }
 
-function calcSumDelay(delayMean) {
-    // "cum delays" the cumulative delay time
 
-    // INSERT LOGIC HERE
-    // (This could benefit from being inside the main loop instead of a function?)
-    // (Making everything a function for now just for clarity)
-    sumDelay = 3;
+// #######   #####################################
+// ## 4 ##   ## Cumulative Delay Time (Seconds) ##
+// #######   #####################################
 
-    return sumDelay; // <- rename appropriately if needed
+// This function calculates the cumulative delay time of all tasks (in seconds)
+// Input/parameters:
+//    — DelayMean: The average delay time (in seconds) for a given task
+//    - NextCumulativeDelay: The cumulative delay time (in seconds) of the next task
+// Calculation/Formula:
+//    i) Cumulative Delay Time = DelayMean + NextCumulativeDelay
+// Note:
+// The logic of this had me stuck for a while as it starts from the last task backwards.
+// This figure basically tells you the delay time at any given task in the adversary path.
+// Therefore, the first task has the largest corresponding cumulative delay
+// as the total delay time of the whole path remains.
+// The further down the sequence or adversary path, the less time you have.
+
+function CalculateCumulativeDelay(DelayMean, NextCumulativeDelay) {
+    // "parseFloat" converts the input(s) to a number.
+    // if the input is blank the function argument assigns a value:
+    //     i) "|| 0" assigns a value of 0
+    DelayMean = parseFloat(DelayMean) || 0;
+    NextCumulativeDelay = parseFloat(NextCumulativeDelay) || 0;
+    // Calculation/Formula
+    let CumulativeDelay = DelayMean + NextCumulativeDelay;
+    // Return the Cumulative Delay Time
+    return CumulativeDelay;
 }
 
-function calcSumVar(delayDeviation) {
-    // "Cum Var" the cumulative variance (standard deviation) 
 
-    // INSERT LOGIC HERE
-    // (This could benefit from being inside the main loop instead of a function?)
-    // (Making everything a function for now just for clarity)
-    sumVar = 4;
+// #######   #########################
+// ## 5 ##   ## Cumulative Variance ##
+// #######   #########################
 
-    return sumVar; // <- rename appropriately if needed
+// This function calculates the cumulative variance/variation of all tasks
+// In this scenario, variation is the measurement of how much task times can differ from the average
+// Input/parameters:
+//    – Delay_SDev: The Standard Deviation of Delay Time
+//    – NextCumulativeVariation (The cumulative variation time (in seconds) for the next task)
+// Calculation/Formula:
+//    i) Cumulative Variance Time = (Delay_SDev x Delay_SDev) + NextCumulativeVariation
+
+function CalculateCumulativeVariance(Delay_SDev, NextCumulativeVariation) {
+    // "parseFloat" converts the input(s) to a number.
+    // if the input is blank the function argument assigns a value:
+    //     i) "|| 0" assigns a value of 0
+    Delay_SDev = parseFloat(Delay_SDev) || 0;
+    NextCumulativeVariation = parseFloat(NextCumulativeVariation) || 0;
+    // Calculation/Formula
+    let CumulativeVariance = (Delay_SDev * Delay_SDev) + NextCumulativeVariation;
+    // Return Cumulative Variance
+    return CumulativeVariance;
 }
 
-function calcTrueMean(location, delayMean, sumDelay) {
-    // "True Mean" a modifier to sumDelay that accounts for 'Location'
 
-    // INSERT LOGIC HERE
-    trueMean = 5;
+// #######   ###############
+// ## 6 ##   ## True Mean ##
+// #######   ###############
 
-    return trueMean; // <- rename appropriately if needed
+// The purpose of this function is to determine the 'true' mean/average delay time (cumulative).
+// This figure is calculated based on the weight assigned to the 'locationTiming' value.
+// Input/parameters:
+//     – locationTiming: At what point during the step are guards notified of the adversary's action?
+//         i) B for Beggining
+//            The "B" value is assigned a weight of 1
+//            If guards are notified at the beginning of an task
+//            they have the full (1) duration of the task to respond
+//         ii) M for Middle
+//             The "M" value is assigned a weight of 0.5
+//             If guards are notified halfway through of an task
+//             they only have half (0.5) of the task duration to respond
+//         iii) E for End
+//             The "E" value is assigned a weight of 0
+//             If guards are notified at the end of a task
+//             there is no time left (0) in the task duration to respond
+//     – DelayMean: The average delay (in seconds) for each action/step in the adversary path. 
+//     – NextCumulativeDelay: The cumulative delay time (in seconds) for the next task
+// Formula/Calculation: 
+//     – True Mean = (Weight * Delay Mean) + Next Cumulative Delay
+// Note:
+// The logic of this had me stuck for a while as it starts from the last task backwards.
+// This figure basically tells you the delay time at any given task in the adversary path
+// (accounting for the time at which detection occurs)
+// Therefore, the first task has the largest corresponding cumulative delay
+// as the total delay time of the whole path remains.
+// The further down the sequence or adversary path, the less time you have.
+
+function CalculateTrueMean(locationTiming, DelayMean, NextCumulativeDelay) {
+    // "parseFloat" converts the input(s) to a number.
+    // if the input is blank the function argument assigns a value:
+    //     i) "|| 0" assigns a value of 0
+    DelayMean = parseFloat(DelayMean) || 0;
+    NextCumulativeDelay = parseFloat(NextCumulativeDelay) || 0;
+    // Set the default Timing Weight to 0
+    let weight = 0;
+    // If the Timing is "B" (Beginning) set the weight to 1
+    if (locationTiming === "B") weight = 1;
+    // If the Timing is "M" (Middle) set the weight to 0.5
+    else if (locationTiming === "M") weight = 0.5;
+    // For everything else (e.g., "E" (End)) set the weight to 0
+    else weight = 0;
+    // Calculation/Formula
+    let TrueMean = (weight * DelayMean) + NextCumulativeDelay;
+    // Return the True Mean value
+    return TrueMean;
 }
 
-function calcTrueVar(location, delayDeviation, sumVar) {
-    // "True Var" a modifier to sumVar that accounts for 'Location'
 
-    // INSERT LOGIC HERE
-    trueVar = 6;
+// #######   ###################
+// ## 7 ##   ## True Variance ##
+// #######   ###################
 
-    return trueVar; // <- rename appropriately if needed
+// The purpose of this function is to determine the 'true' variation of delay times (cumulative).
+// In this scenario, variation is the measurement of how much task times can differ from the average
+// Input/parameters:
+//     – Timing: At what point during the step are guards notified of the adversary's action?
+//         i) B for Beggining
+//            The "B" value is assigned a weight of 1
+//            If guards are notified at the beginning of an task
+//            they have the full (1) duration of the task to respond
+//         ii) M for Middle
+//             The "M" value is assigned a weight of 0.5
+//             If guards are notified halfway through of an task
+//             they only have half (0.5) of the task duration to respond
+//         iii) E for End
+//             The "E" value is assigned a weight of 0
+//             If guards are notified at the end of a task
+//             there is no time left (0) in the task duration to respond
+//     – Delay_SDev: The Standard Deviation of Delay Time
+//     – NextCumulativeVariance: The cumulative variance time (in seconds) for the next task
+// Formula/Calculation:
+//     – True Variance = ((weight * weight) * (Delay S-Dev * Delay S-Dev)) + Next Cumulative Variance
+
+function CalculateTrueVariance(locationTiming, Delay_SDev, NextCumulativeVariance) {
+    // "parseFloat" converts the input(s) to a number.
+    // if the input is blank the function argument assigns a value:
+    //     i) "|| 0" assigns a value of 0
+    Delay_SDev = parseFloat(Delay_SDev) || 0;
+    NextCumulativeDelay = parseFloat(NextCumulativeDelay) || 0;
+    // Set the default Timing Weight to 0
+    let weight = 0;
+    // If the Timing is "B" (Beginning) set the weight to 1
+    if (locationTiming === "B") weight = 1;
+    // If the Timing is "M" (Middle) set the weight to 0.5
+    else if (locationTiming === "M") weight = 0.5;
+    // For everything else (e.g., "E" (End)) set the weight to 0
+    else weight = 0;
+    // Calculate the variance of the current task
+    let CurrentTaskVariance = Delay_SDev * Delay_SDev;
+    // Apply the timing weight to the variation
+    let TrueVariance = ((weight * weight) * CurrentTaskVariance) + NextCumulativeVariance;
+    // Return the True Variance value
+    return TrueVariance;
 }
 
-function calcZValue(trueMean, trueVar, responseMean, forceTime) {
-    // "z-values" how ahead / behind attacker is in relation to guards
 
-    // INSERT LOGIC HERE
-    zValue = 7;
+// #######   #############
+// ## 8 ##   ## Z Value ##
+// #######   #############
 
-    return zValue; // <- rename appropriately if needed
+// This value tells us how far ahead or behind the attacker is in relation to the guards.
+// Input/parameters:
+//    – TrueMean: the average delay time accounting for detection timing
+//    — TrueVariance: the variance/variation time of tasks accounting for detection timing
+//    – GuardResponseMean: the average response time for guards to arrive
+//    – GuardResponse_SDev: the Standard Deviation of the response time
+//        i) GuardResponseVariation = GuardResponse_SDev x GuardResponse_SDev
+// Calculation/Formula:
+//    i) Z = (GuardResponseMean - TrueMean) / Square Root(GuardResponseVariation + TrueVariance)
+
+function Calculate_Z_Value(TrueMean, TrueVariance, GuardResponseMean, GuardResponse_SDev) {
+    // "parseFloat" converts the input(s) to a number.
+    // if the input is blank the function argument assigns a value:
+    //     i) "|| 0" assigns a value of 0
+    TrueMean = parseFloat(TrueMean) || 0;
+    TrueVariance = parseFloat(TrueVariance) || 0;
+    GuardResponseMean = parseFloat(GuardResponseMean) || 0;
+    GuardResponse_SDev = parseFloat(GuardResponse_SDev) || 0;
+    // Formula for calculating Guard Response Variation
+    let GuardResponseVariation = GuardResponse_SDev * GuardResponse_SDev;
+    // Formula for calculating the latter half of the equation 
+    //    i) Square Root(GuardResponseVariation + CumulativeVariance)
+    let Formula_Division = Math.sqrt(GuardResponseVariation + TrueVariance);
+    // Final formula
+    let Z_Value = (GuardResponseMean - TrueMean) / Formula_Division;
+    // Return Z Value
+    return Z_Value;
 }
 
-function calcNormalValues(zValue) {
-    // "Normal values" probability of guards arriving before attackers finish the given step
 
-    // INSERT LOGIC HERE
-    // (3rd page Excel logic probably all goes in here)
-    normalValue = 8;
+// #######   ##########################
+// ## 9 ##   ## Error Function (erf) ##
+// #######   ##########################
+// This function implements the error function equation (erf).
+// Specifically, formula 7.1.26 by Abramowitz & Stegun (1972).
+// APA 7th Reference:
+//    i) Abramowitz, M., & Stegun, I. A. (1972). 
+//       Handbook of mathematical functions with formulas, graphs, and mathematical tables 
+//       (10th print., with corrections). U.S. Dept. of Commerce : U.S. G.P.O. 
+//       http://books.google.com/books?id=ZboM5tOFWtsC
+// The function below is taken directly from the picomath 'erf.js' interpretation of the error function.
+// APA 7th Reference(s):
+//    i) Hegwill, G. (n.d.). Picomath Javascript erf.js. 
+//       Retrieved from https://hewgill.com/picomath/javascript/erf.js.html
+//    ii) Hegwill, G. (n.d.). erf.js.
+//        GitHub. Retrieved from https://github.com/ghewgill/picomath/blob/master/javascript/erf.js
 
-    return normalValue; // <- rename appropriately if needed
+function erf(x) {
+    // constants
+    var a1 =  0.254829592;
+    var a2 = -0.284496736;
+    var a3 =  1.421413741;
+    var a4 = -1.453152027;
+    var a5 =  1.061405429;
+    var p  =  0.3275911;
+
+    // Save the sign of x
+    var sign = 1;
+    if (x < 0) {
+        sign = -1;
+    }
+    x = Math.abs(x);
+
+    // A&S formula 7.1.26
+    var t = 1.0/(1.0 + p*x);
+    var y = 1.0 - (((((a5*t + a4)*t) + a3)*t + a2)*t + a1)*t*Math.exp(-x*x);
+
+    return sign*y;
 }
 
-function calcProduct(firstPoint, normalValue) {
-    // "prod h?*n?" The product of multiplying normalValue with firstPoint
-    // Gives overall probability that the specific task (the row) is interrupted
 
-    // INSERT LOGIC HERE
-    product = 9;
+// ########   ##################################
+// ## 10 ##   ## Standard Normal Distribution ##
+// ########   ##################################
 
-    return product; // <- rename appropriately if needed
+// This function uses the Cumulative Distribution Function (CDF) of Standard Normal Distribution.
+// Using CDF, the function converts the z value to a probability between 0 and 1. 
+// This probability (0 to 1) indicates the probability that guards will arrive before the adversary finishes a task. 
+// Standard Normal Distribution CDF Formula:
+//    i) (1/2)*(1+erf(x/sqrt(2)))
+//        ii) MATLAB Reference:
+//            iii) https://www.mathworks.com/help/matlab/ref/erf.html
+
+function CumulativeDistributionFunction(Z_Value) {
+    // Calculation/Formula (taken/adapted from MATLAB reference)
+    let CDF_Probability = 0.5 * (1 + erf(Z_Value / Math.sqrt(2)));
+    // Return the CDF Value/Probability
+    return CDF_Probability;
+}
+
+// ########   ###################################################
+// ## 11 ##   ## Probability of Interruption (Individual Task) ##
+// ########   ###################################################
+
+// This function calculates the Probability of Interruption for each individual task
+// Input/parameters:
+//     – FirstDetection: the probability that a given task is the first point of detection.
+//     – CDF_Probability: the probability that guards will arrive before the adversary finishes a task.
+// Calculation/Formula:
+//     – Probability of Interruption (Individual Task) = First Detection x CDF Probability
+// Note: 
+// I was initially confused in regard to the difference between this and the figure produced by Standard Normal Distribution (CDF).
+// The figure produced above by Standard Normal Distribution is a probability that guards will arrive IF the adversary is detected.
+// This formula produces a figure that is simply the probability of interruption for any given task (similar, but different).
+function CalculateTaskProbabilityOfInterruption(FirstDetection, CDF_Probability) {
+    // Calculation/Formula
+    let TaskProbabilityOfInterruption = FirstDetection * CDF_Probability;
+    return TaskProbabilityOfInterruption;
+}
+
+
+// ########   #########################################
+// ## 12 ##   ## Overall Probability of Interruption ##
+// ########   #########################################
+
+// This is the last 'core' function that ties everything together.
+// It calculates the Overall Probability of Interruption.
+
+function CalculateOverallProbabilityOfInterruption() {
+
 }
 
 
@@ -104,41 +364,63 @@ function tablePrint(mainTable) {
 
     let row = smallTable.rows[0];
     // Front End Values (Direct Inputs of upper table)
-    const guardComms = row.cells [1].querySelector("input").value;
-    const responseMean = row.cells [3].querySelector("input").value;
-    const forceTime = row.cells [4].querySelector("input").value;
+    const guardComms = row.cells [1].querySelector("input").value
+    const PAssessment = row.cells [2].querySelector("input").value;
+    const PTransmission = row.cells [3].querySelector("input").value;
+    const GuardResponseMean = row.cells [4].querySelector("input").value;
+    const GuardResponse_SDev = row.cells [5].querySelector("input").value;
 
-    results.push(`Guard Comms: ${guardComms}, Response Mean: ${responseMean}, Force Time: ${forceTime}`);
+    results.push(`Guard Comms: ${guardComms}, P(A): ${PAssessment}, P(T): ${PTransmission}, Response Mean: ${GuardResponseMean}, Force Time: ${GuardResponse_SDev}\n`);
     results.push(`-----------------------`);
+
+    // Initialisers
+    let PreviousPoMD = 1;
 
     [...mainTable.rows].forEach((row, index) => {
 
         // Front End Values (Direct Inputs)
-        const detection = row.cells[2].querySelector("input").value;
-        const location = row.cells[3].querySelector("select").value;
-        const delayMean = row.cells[4].querySelector("input").value;
-        const delayDeviation = row.cells[5].querySelector("input").value;
+        const PDetection = row.cells[2].querySelector("input").value;
 
-        //
+        const locationTiming = row.cells[3].querySelector("select").value;
 
-        // Back End Values (Function Calculations)
-        const scaling = calcScaling(detection);
-        const miss = calcMiss(scaling);
-        const firstPoint = calcFirstPoint(scaling);
-        const sumDelay = calcSumDelay(delayMean);
-        const sumVar = calcSumVar(delayDeviation);
-        const trueMean = calcTrueMean(location, delayMean, sumDelay);
-        const trueVar = calcTrueVar(location, delayDeviation, sumVar);
-        const zValue = calcZValue(trueMean, trueVar, responseMean, forceTime);
-        const normalValue = calcNormalValues(zValue);
-        const product = calcProduct(firstPoint, normalValue);
+        const DelayMean = row.cells[4].querySelector("input").value;
+
+        const Delay_SDev = row.cells[5].querySelector("input").value;
+
 
         results.push(`R O W  ${index + 1} :\n`);
-        results.push(`Detection: ${detection}, Location: ${location}, Mean: ${delayMean}, Deviation: ${delayDeviation}\n`);
-        results.push(`Pd(scaling): ${scaling}, 1-Pd: ${miss}, P(first detn): ${firstPoint}\n`);
-        results.push(`Sum Delays: ${sumDelay}, Sum Var: ${sumVar}, True Mean: ${trueMean}, True Var: ${trueVar}\n`);
-        results.push(`z-values: ${zValue}, Normal Values: ${normalValue}, prod h?*n?: ${product}`);
+        results.push(`P(D): ${PDetection}, Location: ${locationTiming}, Mean: ${DelayMean}, Deviation: ${Delay_SDev}\n`);
+
+        // Back End Values (Function Calculations)
+        const AdjustedDetection = AdjustedProbabilityOfDetection(PDetection, PAssessment, PTransmission);
+
+        const MissedDetection = ProbabilityOfMissedDetection(AdjustedDetection);
+
+        const FirstDetection = FirstPointOfDetection(AdjustedDetection, PreviousPoMD);
+
+        // const CumulativeDelay = CalculateCumulativeDelay(DelayMean, NextCumulativeDelay);
+
+        // const CumulativeVariance = CalculateCumulativeVariance(Delay_SDev, NextCumulativeVariation);
+
+        // const TrueMean = CalculateTrueMean(locationTiming, DelayMean, NextCumulativeDelay);
+
+        // const TrueVariance = CalculateTrueVariance(locationTiming, Delay_SDev, NextCumulativeVariance);
+
+        // const Z_Value = Calculate_Z_Value(TrueMean, TrueVariance, GuardResponseMean, GuardResponse_SDev);
+
+        // const CDF_Probability = CumulativeDistributionFunction(Z_Value);
+
+        // const TaskProbabilityOfInterruption = CalculateTaskProbabilityOfInterruption(FirstDetection, CDF_Probability);
+
+    
+        results.push(`Adjusted P(d): ${AdjustedDetection}, Miss Detection: ${MissedDetection}, First Detection: ${FirstDetection}\n`);
+        // results.push(`Sum Delays: ${CumulativeDelay}, Sum Var: ${CumulativeVariance}, True Mean: ${TrueMean}, True Var: ${TrueVariance}\n`);
+        // results.push(`z-values: ${Z_Value}, Normal Values: ${CDF_Probability}, prod h?*n?: ${TaskProbabilityOfInterruption}`);
+        
         results.push(`-----------------------`);
+
+        // Update values for NEXT loop / row
+        PreviousPoMD *= MissedDetection
         
     });
 
