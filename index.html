@@ -52,18 +52,18 @@
 
     /* Vertical Task Stack (use to be in a row) */
     .tasks-row {
-      flex: 1;
+      flex: 0 0 auto;
       display: flex;
       flex-direction: column;
       gap: 10px;
       align-items: stretch;
     }
 
-    /* Expanding Tables (width) */
     .task-table,
     .transition-table {
       display: table;
       width: auto;
+      table-layout: fixed;
     }
 
     .task-table th,
@@ -333,7 +333,7 @@
         </select>`;
       const selT = tdLocation.firstElementChild;
       selT.value = unit.transition.location;
-      selT.oninput  = (e) => { unit.transition.location = e.target.value; handleChange(); };
+      selT.oninput = (e) => { unit.transition.location = e.target.value; handleChange(); };
       selT.onchange = (e) => { unit.transition.location = e.target.value; handleChange(); };
       trB.appendChild(tdLocation);
 
@@ -417,7 +417,7 @@
         </select>`;
       const sel = tdLocation.firstElementChild;
       sel.value = task.location;
-      sel.oninput  = (e) => { task.location = e.target.value; handleChange(); };
+      sel.oninput = (e) => { task.location = e.target.value; handleChange(); };
       sel.onchange = (e) => { task.location = e.target.value; handleChange(); };
       trB.appendChild(tdLocation);
 
@@ -498,7 +498,7 @@
       // Can print every path and P(i):
       // const PathList = String(EASIcontent.pathText || "");
       // document.getElementById("PathList").textContent = PathList;
-  
+
       // Can print every task of the MVP:
       // const MVPList = String(EASIcontent.mvpDetailsText || "");
       // document.getElementById("MVPList").textContent = MVPList;
