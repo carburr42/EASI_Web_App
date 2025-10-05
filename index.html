@@ -9,12 +9,27 @@
 
   <style>
     /* Base table look */
-    table { border-collapse: collapse; }
-    th, td { padding: 6px; border: 1px solid black; }
-    .invis { border: none; }
+    table {
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 6px;
+      border: 1px solid black;
+    }
+
+    .invis {
+      border: none;
+    }
 
     /* Layer / Task Layout */
-    .layers-wrap { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+    .layers-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 12px;
+    }
 
     .layer {
       display: flex;
@@ -45,13 +60,16 @@
     }
 
     /* Expanding Tables (width) */
-    .task-table, .transition-table {
+    .task-table,
+    .transition-table {
       display: table;
       width: auto;
     }
 
-    .task-table th, .task-table td,
-    .transition-table th, .transition-table td {
+    .task-table th,
+    .task-table td,
+    .transition-table th,
+    .transition-table td {
       padding: 6px;
       border: 1px solid black;
       text-align: left;
@@ -65,10 +83,20 @@
       justify-content: center;
     }
 
-    .controls-row { margin-top: 10px; display: flex; gap: 8px; }
+    .controls-row {
+      margin-top: 10px;
+      display: flex;
+      gap: 8px;
+    }
 
-    button { cursor: pointer; }
-    button[disabled] { opacity: 0.5; cursor: not-allowed; }
+    button {
+      cursor: pointer;
+    }
+
+    button[disabled] {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
   </style>
 
   <p style="text-align:center; border:none; font-size:25px;">
@@ -98,7 +126,11 @@
   </table>
 
   <!-- Spacer -->
-  <table><tbody><td class="invis"></td></tbody></table>
+  <table>
+    <tbody>
+      <td class="invis"></td>
+    </tbody>
+  </table>
 
   <!-- LAYERS Area -->
   <div id="layersContainer" class="layers-wrap"></div>
@@ -111,15 +143,22 @@
 
   <br>
 
-  <!-- Result Box -->
+  <!-- Result Section -->
   <table>
     <tbody>
+      <tr>
+        <th>Most Vulnerable Path:</th>
+        <th id="MVPpath"></th>
+      </tr>
       <tr>
         <th>Probability of Interruption:</th>
         <th id="EASIresult"></th>
       </tr>
     </tbody>
   </table>
+
+  <pre id="PathList" style="font-size:14px;"></pre>
+  <pre id="MVPList" style="font-size:14px;"></pre>
 
   <pre id="output"></pre>
 
@@ -183,7 +222,7 @@
 
         const transTitle = document.createElement('div');
         transTitle.className = 'layer-title';
-        transTitle.textContent = `Layer ${layerNumberTrans} - Transitional`;
+        transTitle.textContent = `Layer ${layerNumberTrans}`;
         transDiv.appendChild(transTitle);
 
         // Table
@@ -196,7 +235,7 @@
 
         const taskTitle = document.createElement('div');
         taskTitle.className = 'layer-title';
-        taskTitle.textContent = `Layer ${layerNumberTasks} - Tasks`;
+        taskTitle.textContent = `Layer ${layerNumberTasks}`;
         taskDiv.appendChild(taskTitle);
 
         const row = document.createElement('div');
@@ -292,8 +331,10 @@
           <option value="M">M</option>
           <option value="E">E</option>
         </select>`;
-      tdLocation.firstChild.value = unit.transition.location || 'B';
-      tdLocation.firstChild.onchange = (e) => { unit.transition.location = e.target.value; handleChange(); };
+      const selT = tdLocation.firstElementChild;
+      selT.value = unit.transition.location;
+      selT.oninput  = (e) => { unit.transition.location = e.target.value; handleChange(); };
+      selT.onchange = (e) => { unit.transition.location = e.target.value; handleChange(); };
       trB.appendChild(tdLocation);
 
       // Delay mean
@@ -374,8 +415,10 @@
           <option value="M">M</option>
           <option value="E">E</option>
         </select>`;
-      tdLocation.firstChild.value = task.location || 'B';
-      tdLocation.firstChild.onchange = (e) => { task.location = e.target.value; handleChange(); };
+      const sel = tdLocation.firstElementChild;
+      sel.value = task.location;
+      sel.oninput  = (e) => { task.location = e.target.value; handleChange(); };
+      sel.onchange = (e) => { task.location = e.target.value; handleChange(); };
       trB.appendChild(tdLocation);
 
       // Delay mean
@@ -405,6 +448,7 @@
       // Insert before final unit
       const idx = Math.max(0, units.length - 1);
       units.splice(idx, 0, makeUnit(''));
+      render();
     }
 
     function removeUnit() {
@@ -436,12 +480,28 @@
     /* Result */
     function handleChange() {
 
-      const ProbabilityOfInterruption = NaN; // not computed yet
+      const EASIcontent = CalculateMVP() || {};
+      // pathText          ->  List of all paths and respective probabilities of interruption.
+      // mvpDetailsText    ->  List of all tasks in the MVP and their backend values (Used for testing).
+      // mvpPInterruption  ->  Probability of interruption of the MVP.
+      // mvpPath           ->  Path taken for the MVP.
 
+      const MVPpath = String(EASIcontent.mvpPath || "");
+      document.getElementById("MVPpath").textContent = MVPpath;
+
+      const ProbabilityOfInterruption = Number(EASIcontent.mvpPInterruption);
       document.getElementById("EASIresult").textContent =
         Number.isFinite(ProbabilityOfInterruption)
-          ? Math.max(0, Math.min(1, ProbabilityOfInterruption)).toFixed(6)
+          ? `${ProbabilityOfInterruption.toFixed(6)} %`
           : "";
+
+      // Can print every path and P(i):
+      // const PathList = String(EASIcontent.pathText || "");
+      // document.getElementById("PathList").textContent = PathList;
+  
+      // Can print every task of the MVP:
+      // const MVPList = String(EASIcontent.mvpDetailsText || "");
+      // document.getElementById("MVPList").textContent = MVPList;
     }
 
     /* make the 2 mandatory units */
@@ -460,6 +520,7 @@
     init();
 
   </script>
-  
+
 </body>
+
 </html>

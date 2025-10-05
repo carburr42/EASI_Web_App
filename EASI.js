@@ -57,8 +57,8 @@ function ProbabilityOfMissedDetection(AdjustedDetection) {
 
 // This function calculates the probability that a given task is the first point of detection.
 // Input/parameters:
-//    — AdjustedDetection: Adjusted Probability of Detection
-//    — PreviousPoMD: The probability of missed detection from the previous task
+//    - AdjustedDetection: Adjusted Probability of Detection
+//    - PreviousPoMD: The probability of missed detection from the previous task
 // Calculation/Formula:
 //    i) Probability of First Point of Detection = AdjustedDetection x PreviousPoMD
 
@@ -81,7 +81,7 @@ function FirstPointOfDetection(AdjustedDetection, PreviousPoMD) {
 
 // This function calculates the cumulative delay time of all tasks (in seconds)
 // Input/parameters:
-//    — DelayMean: The average delay time (in seconds) for a given task
+//    - DelayMean: The average delay time (in seconds) for a given task
 //    - NextCumulativeDelay: The cumulative delay time (in seconds) of the next task
 // Calculation/Formula:
 //    i) Cumulative Delay Time = DelayMean + NextCumulativeDelay
@@ -238,7 +238,7 @@ function CalculateTrueVariance(locationTiming, Delay_SDev, NextCumulativeVarianc
 // This value tells us how far ahead or behind the attacker is in relation to the guards.
 // Input/parameters:
 //    – TrueMean: the average delay time accounting for detection timing
-//    — TrueVariance: the variance/variance time of tasks accounting for detection timing
+//    - TrueVariance: the variance/variance time of tasks accounting for detection timing
 //    – GuardResponseMean: the average response time for guards to arrive
 //    – GuardResponse_SDev: the Standard Deviation of the response time
 //        i) GuardResponseVariance = GuardResponse_SDev x GuardResponse_SDev
@@ -284,12 +284,12 @@ function Calculate_Z_Value(TrueMean, TrueVariance, GuardResponseMean, GuardRespo
 
 function erf(x) {
     // constants
-    var a1 =  0.254829592;
+    var a1 = 0.254829592;
     var a2 = -0.284496736;
-    var a3 =  1.421413741;
+    var a3 = 1.421413741;
     var a4 = -1.453152027;
-    var a5 =  1.061405429;
-    var p  =  0.3275911;
+    var a5 = 1.061405429;
+    var p = 0.3275911;
 
     // Save the sign of x
     var sign = 1;
@@ -299,10 +299,10 @@ function erf(x) {
     x = Math.abs(x);
 
     // A&S formula 7.1.26
-    var t = 1.0/(1.0 + p*x);
-    var y = 1.0 - (((((a5*t + a4)*t) + a3)*t + a2)*t + a1)*t*Math.exp(-x*x);
+    var t = 1.0 / (1.0 + p * x);
+    var y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
 
-    return sign*y;
+    return sign * y;
 }
 
 
@@ -358,208 +358,235 @@ function CalculateOverallProbabilityOfInterruption(SumOfInterruption, GuardCommu
     return OverallProbabilityOfInterruption;
 }
 
+// ###################
+// ## MAIN FUNCTION ##
+// ###################
 
-function tablePrint(mainTable) {
-    let results = [];
-    results.push(`-----------------------`);
+function CalculateMVP() {
+    const container = document.getElementById('layersContainer');
+    if (!container) return;
 
-    let row = smallTable.rows[0];
-    // Front End Values (Direct Inputs of upper table)
-    const GuardCommunication = row.cells [1].querySelector("input").value
-    const PAssessment = row.cells [2].querySelector("input").value;
-    const PTransmission = row.cells [3].querySelector("input").value;
-    const GuardResponseMean = row.cells [4].querySelector("input").value;
-    const GuardResponse_SDev = row.cells [5].querySelector("input").value;
+    const lines = [];
+    const safe = v => (v === undefined || v === null || String(v).trim() === '' ? '-' : String(v).trim());
+    const toNum = v => {
+        const x = parseFloat(v);
+        return Number.isFinite(x) ? x : 0;
+    };
 
-    results.push(`Guard Comms: ${GuardCommunication}, P(A): ${PAssessment}, P(T): ${PTransmission}, Response Mean: ${GuardResponseMean}, Force Time: ${GuardResponse_SDev}\n`);
-    results.push(`-----------------------`);
+    // Read 'small table' inputs
+    const smallTable = document.getElementById('smallTable');
+    const stRow = smallTable?.rows?.[0];
 
-6
-    // BACKWARDS PASSING (For "next" loop/row values)
-    const rows = [...mainTable.rows];
-    const n = rows.length;
+    const GuardCommunication = toNum(stRow?.cells?.[0]?.querySelector('input')?.value);
+    const PAssessment = toNum(stRow?.cells?.[1]?.querySelector('input')?.value);
+    const PTransmission = toNum(stRow?.cells?.[2]?.querySelector('input')?.value);
+    const GuardResponseMean = toNum(stRow?.cells?.[3]?.querySelector('input')?.value);
+    const GuardResponse_SDev = toNum(stRow?.cells?.[4]?.querySelector('input')?.value);
 
-    // Delay Mean
-    const DelayMeanArray = rows.map(r => parseFloat(r.cells[4].querySelector("input").value) || 0);
+    // Collect layers from Document Object Model (DOM)
+    const layers = container.querySelectorAll('.layer');
 
-    const NextCumulativeDelay_Marker = new Array(n);
-    const CumulativeDelay_Marker = new Array(n);
+    // Path Building
+    const paths = [[]]; // start with empty path
+    layers.forEach((layer, idx) => {
+        const layerNo = idx + 1;
+        const taskTables = layer.querySelectorAll('.task-table');
+        const isTaskLayer = taskTables.length > 0;
 
-    let NextCumulativeDelay = 0;
-    for (let i = n - 1; i >= 0; i--) {
-        NextCumulativeDelay_Marker[i] = NextCumulativeDelay;
-        const cd = CalculateCumulativeDelay(DelayMeanArray[i], NextCumulativeDelay);
-        CumulativeDelay_Marker[i] = cd;
-        NextCumulativeDelay = cd;
-    }
-
-    // Delay S_Dev
-    const VarianceArray = rows.map(r => parseFloat(r.cells[5].querySelector("input").value) || 0);
-
-    const NextCumulativeVariance_Marker = new Array(n);
-    const CumulativeVariance_Marker = new Array(n);
-
-    let NextCumulativeVariance = 0;
-    for (let i = n - 1; i >= 0; i--) {
-        NextCumulativeVariance_Marker[i] = NextCumulativeVariance;
-        const cd = CalculateCumulativeVariance(VarianceArray[i], NextCumulativeVariance);
-        CumulativeVariance_Marker[i] = cd;
-        NextCumulativeVariance = cd;
-    }
-
-
-
-    // Initialisers
-    let PreviousPoMD = 1;
-    let SumOfInterruption = 0;
-
-    rows.forEach((row, index) => {
-
-        // Front End Values (Direct Inputs)
-        const PDetection = row.cells[2].querySelector("input").value;
-
-        const locationTiming = row.cells[3].querySelector("select").value;
-
-        const DelayMean = DelayMeanArray[index]; 
-
-        const Delay_SDev = VarianceArray[index]; 
-
-
-        results.push(`R O W  ${index + 1} :\n`);
-        results.push(`P(D): ${PDetection}, Location: ${locationTiming}, Mean: ${DelayMean}, Deviation: ${Delay_SDev}\n`);
-
-        // Back End Values (Function Calculations)
-        const AdjustedDetection = AdjustedProbabilityOfDetection(PDetection, PAssessment, PTransmission);
-
-        const MissedDetection = ProbabilityOfMissedDetection(AdjustedDetection);
-
-        const FirstDetection = FirstPointOfDetection(AdjustedDetection, PreviousPoMD);
-
-        const NextCumulativeDelay = NextCumulativeDelay_Marker[index];
-        const CumulativeDelay = CalculateCumulativeDelay(DelayMean, NextCumulativeDelay);
-
-        const NextCumulativeVariance = NextCumulativeVariance_Marker[index];
-        const CumulativeVariance = CalculateCumulativeVariance(Delay_SDev, NextCumulativeVariance);
-
-        const TrueMean = CalculateTrueMean(locationTiming, DelayMean, NextCumulativeDelay);
-
-        const TrueVariance = CalculateTrueVariance(locationTiming, Delay_SDev, NextCumulativeVariance);
-
-        const Z_Value = Calculate_Z_Value(TrueMean, TrueVariance, GuardResponseMean, GuardResponse_SDev);
-
-        const CDF_Probability = CumulativeDistributionFunction(Z_Value);
-
-        const TaskProbabilityOfInterruption = CalculateTaskProbabilityOfInterruption(FirstDetection, CDF_Probability);
-
-    
-        results.push(`Adjusted P(d): ${AdjustedDetection}, Miss Detection: ${MissedDetection}, First Detection: ${FirstDetection}\n`);
-        results.push(`Cumulative Delays: ${CumulativeDelay}, Cumulative Var: ${CumulativeVariance}, True Mean: ${TrueMean}, True Var: ${TrueVariance}\n`);
-        results.push(`Z-Value: ${Z_Value}, Normal Value: ${CDF_Probability}, Task Interruption Probability: ${TaskProbabilityOfInterruption}`);
-        
-        results.push(`-----------------------`);
-
-        // Update values for NEXT loop / row
-        PreviousPoMD *= MissedDetection;
-        SumOfInterruption += TaskProbabilityOfInterruption;
-        
+        if (!isTaskLayer) {
+            // Transitional Layer (single fixed task)
+            paths.forEach(p => p.push(`${layerNo}`));
+        } else {
+            // Task Layer (branch per task table)
+            const branched = [];
+            taskTables.forEach((_, tIdx) => {
+                paths.forEach(p => branched.push([...p, `${layerNo}.${tIdx + 1}`]));
+            });
+            paths.length = 0;
+            paths.push(...branched);
+        }
     });
 
-    const OverallProbabilityOfInterruption = CalculateOverallProbabilityOfInterruption(SumOfInterruption, GuardCommunication);
-    results.push(`PROBABILITY OF INTERRUPTION: ${OverallProbabilityOfInterruption}`)
-
-    return results;
-}
-
-function CalculateEASI(mainTable) {
-    let results = [];
-
-    let row = smallTable.rows[0];
-    // Front End Values (Direct Inputs of upper table)
-    const GuardCommunication = row.cells [1].querySelector("input").value
-    const PAssessment = row.cells [2].querySelector("input").value;
-    const PTransmission = row.cells [3].querySelector("input").value;
-    const GuardResponseMean = row.cells [4].querySelector("input").value;
-    const GuardResponse_SDev = row.cells [5].querySelector("input").value;
-6
-    // BACKWARDS PASSING (For "next" loop/row values)
-    const rows = [...mainTable.rows];
-    const n = rows.length;
-
-    // Delay Mean
-    const DelayMeanArray = rows.map(r => parseFloat(r.cells[4].querySelector("input").value) || 0);
-
-    const NextCumulativeDelay_Marker = new Array(n);
-    const CumulativeDelay_Marker = new Array(n);
-
-    let NextCumulativeDelay = 0;
-    for (let i = n - 1; i >= 0; i--) {
-        NextCumulativeDelay_Marker[i] = NextCumulativeDelay;
-        const cd = CalculateCumulativeDelay(DelayMeanArray[i], NextCumulativeDelay);
-        CumulativeDelay_Marker[i] = cd;
-        NextCumulativeDelay = cd;
+    // Helpers to extract data, per task, from a layer
+    function readTransitionalStep(layerEl, layerNo) {
+        const table = layerEl.querySelector('.transition-table');
+        const headInput = table?.querySelector('thead input[type="text"]');
+        const row = table?.querySelector('tbody tr');
+        const step = {
+            code: `${layerNo}`,
+            desc: safe(headInput?.value),
+            pDetection: toNum(row?.querySelector('td:nth-child(1) input')?.value),
+            location: (row?.querySelector('td:nth-child(2) select')?.value || 'B'),
+            mean: toNum(row?.querySelector('td:nth-child(3) input')?.value),
+            sdev: toNum(row?.querySelector('td:nth-child(4) input')?.value),
+        };
+        return step;
     }
 
-    // Delay S_Dev
-    const VarianceArray = rows.map(r => parseFloat(r.cells[5].querySelector("input").value) || 0);
-
-    const NextCumulativeVariance_Marker = new Array(n);
-    const CumulativeVariance_Marker = new Array(n);
-
-    let NextCumulativeVariance = 0;
-    for (let i = n - 1; i >= 0; i--) {
-        NextCumulativeVariance_Marker[i] = NextCumulativeVariance;
-        const cd = CalculateCumulativeVariance(VarianceArray[i], NextCumulativeVariance);
-        CumulativeVariance_Marker[i] = cd;
-        NextCumulativeVariance = cd;
+    function readTaskStep(layerEl, layerNo, taskIndex) {
+        const table = layerEl.querySelectorAll('.task-table')[taskIndex];
+        const headInput = table?.querySelector('thead input[type="text"]');
+        const row = table?.querySelector('tbody tr');
+        const step = {
+            code: `${layerNo}.${taskIndex + 1}`,
+            desc: safe(headInput?.value),
+            pDetection: toNum(row?.querySelector('td:nth-child(1) input')?.value),
+            location: (row?.querySelector('td:nth-child(2) select')?.value || 'B'),
+            mean: toNum(row?.querySelector('td:nth-child(3) input')?.value),
+            sdev: toNum(row?.querySelector('td:nth-child(4) input')?.value),
+        };
+        return step;
     }
 
+    // Compute monopath metrics for a concrete path (array of step objects)
+    function computePath(steps) {
+        const n = steps.length;
 
+        // Backward pass (cumulative mean delay)
+        const NextCumulativeDelay_Marker = new Array(n);
+        const CumulativeDelay_Marker = new Array(n);
+        let nextCumDelay = 0;
+        for (let i = n - 1; i >= 0; i--) {
+            NextCumulativeDelay_Marker[i] = nextCumDelay;
+            const cd = CalculateCumulativeDelay(steps[i].mean, nextCumDelay);
+            CumulativeDelay_Marker[i] = cd;
+            nextCumDelay = cd;
+        }
 
-    // Initialisers
-    let PreviousPoMD = 1;
-    let SumOfInterruption = 0;
+        // Backward pass (cumulative variance)
+        const NextCumulativeVariance_Marker = new Array(n);
+        const CumulativeVariance_Marker = new Array(n);
+        let nextCumVar = 0;
+        for (let i = n - 1; i >= 0; i--) {
+            NextCumulativeVariance_Marker[i] = nextCumVar;
+            const cv = CalculateCumulativeVariance(steps[i].sdev, nextCumVar);
+            CumulativeVariance_Marker[i] = cv;
+            nextCumVar = cv;
+        }
 
-    rows.forEach((row, index) => {
+        // Forward pass (Missed Detection + Interruption Sum)
+        let PreviousPoMD = 1; // product of missed detections
+        let SumOfInterruption = 0; // sum of task interruptions
+        const perStep = [];
 
-        // Front End Values (Direct Inputs)
-        const PDetection = row.cells[2].querySelector("input").value;
+        for (let i = 0; i < n; i++) {
+            const s = steps[i];
+            const AdjustedDetection = AdjustedProbabilityOfDetection(s.pDetection, PAssessment, PTransmission);
+            const MissedDetection = ProbabilityOfMissedDetection(AdjustedDetection);
+            const FirstDetection = FirstPointOfDetection(AdjustedDetection, PreviousPoMD);
 
-        const locationTiming = row.cells[3].querySelector("select").value;
+            const NextCumulativeDelay = NextCumulativeDelay_Marker[i];
+            const CumulativeDelay = CumulativeDelay_Marker[i];
 
-        const DelayMean = DelayMeanArray[index]; 
+            const NextCumulativeVariance = NextCumulativeVariance_Marker[i];
+            const CumulativeVariance = CumulativeVariance_Marker[i];
 
-        const Delay_SDev = VarianceArray[index]; 
+            const TrueMean = CalculateTrueMean(s.location, s.mean, NextCumulativeDelay);
+            const TrueVariance = CalculateTrueVariance(s.location, s.sdev, NextCumulativeVariance);
 
-        // Back End Values (Function Calculations)
-        const AdjustedDetection = AdjustedProbabilityOfDetection(PDetection, PAssessment, PTransmission);
+            const Z_Value = Calculate_Z_Value(TrueMean, TrueVariance, GuardResponseMean, GuardResponse_SDev);
+            const CDF_Probability = CumulativeDistributionFunction(Z_Value);
 
-        const MissedDetection = ProbabilityOfMissedDetection(AdjustedDetection);
+            const TaskProbabilityOfInterruption = CalculateTaskProbabilityOfInterruption(FirstDetection, CDF_Probability);
 
-        const FirstDetection = FirstPointOfDetection(AdjustedDetection, PreviousPoMD);
+            perStep.push({
+                code: s.code,
+                desc: s.desc,
+                pDetection: s.pDetection,
+                location: s.location,
+                mean: s.mean,
+                sdev: s.sdev,
+                AdjustedDetection,
+                MissedDetection,
+                FirstDetection,
+                CumulativeDelay,
+                CumulativeVariance,
+                TrueMean,
+                TrueVariance,
+                Z_Value,
+                CDF_Probability,
+                TaskProbabilityOfInterruption
+            });
 
-        const NextCumulativeDelay = NextCumulativeDelay_Marker[index];
-        const CumulativeDelay = CalculateCumulativeDelay(DelayMean, NextCumulativeDelay);
+            PreviousPoMD *= MissedDetection;
+            SumOfInterruption += TaskProbabilityOfInterruption;
+        }
 
-        const NextCumulativeVariance = NextCumulativeVariance_Marker[index];
-        const CumulativeVariance = CalculateCumulativeVariance(Delay_SDev, NextCumulativeVariance);
+        const OverallProbabilityOfInterruption =
+            CalculateOverallProbabilityOfInterruption(SumOfInterruption, GuardCommunication);
 
-        const TrueMean = CalculateTrueMean(locationTiming, DelayMean, NextCumulativeDelay);
+        return { perStep, OverallProbabilityOfInterruption };
+    }
 
-        const TrueVariance = CalculateTrueVariance(locationTiming, Delay_SDev, NextCumulativeVariance);
+    // Build paths from DOM to get Probability of Interruption
+    const evaluatedPaths = paths.map(codeList => {
 
-        const Z_Value = Calculate_Z_Value(TrueMean, TrueVariance, GuardResponseMean, GuardResponse_SDev);
+        // Build steps array in order
+        const steps = [];
+        layers.forEach((layer, idx) => {
+            const layerNo = idx + 1;
+            const isTaskLayer = layer.querySelectorAll('.task-table').length > 0;
 
-        const CDF_Probability = CumulativeDistributionFunction(Z_Value);
+            if (!isTaskLayer) {
+                steps.push(readTransitionalStep(layer, layerNo));
+            } else {
+                // Find matching ref for this layer [LAYER-#].[TASK-#]
+                const layerRef = codeList.find(tok => tok.startsWith(`${layerNo}.`));
+                const taskRef = layerRef ? Math.max(1, parseInt(layerRef.split('.')[1], 10)) : 1; // default 1
+                steps.push(readTaskStep(layer, layerNo, taskRef - 1));
+            }
+        });
 
-        const TaskProbabilityOfInterruption = CalculateTaskProbabilityOfInterruption(FirstDetection, CDF_Probability);
-
-        // Update values for NEXT loop / row
-        PreviousPoMD *= MissedDetection;
-        SumOfInterruption += TaskProbabilityOfInterruption;
-        
+        const { perStep, OverallProbabilityOfInterruption } = computePath(steps);
+        return {
+            label: codeList.join(' -> '),
+            steps,
+            perStep,
+            pInterrupt: OverallProbabilityOfInterruption
+        };
     });
 
-    const OverallProbabilityOfInterruption = CalculateOverallProbabilityOfInterruption(SumOfInterruption, GuardCommunication);
+    // Sort by earliest path change (1.1 -> 2.1) -> (1.2 -> 2.1)
+    // and identify Most Vulnerable Path (MVP)
+    let mvpIdx = 0;
+    for (let i = 1; i < evaluatedPaths.length; i++) {
+        if (evaluatedPaths[i].pInterrupt < evaluatedPaths[mvpIdx].pInterrupt) mvpIdx = i;
+    }
 
-    return OverallProbabilityOfInterruption;
+    // List of Paths (each with P(i) % )
+    const pathLines = [];
+    evaluatedPaths.forEach((p, i) => {
+        const pct = (p.pInterrupt * 100).toFixed(6);
+        const tag = (i === mvpIdx) ? ' [MVP]' : '';
+        pathLines.push(`Path ${i + 1}: ${p.label}`);
+        pathLines.push(`Probability of Interruption: ${pct} %${tag}`);
+        pathLines.push('');
+    });
+
+    // MVP Reference
+    const mvp = evaluatedPaths[mvpIdx];
+
+    // MVP Probability of Interruption
+    const mvpPInterruption = Number((mvp.pInterrupt * 100).toFixed(6));
+
+    // MVP Text Print (Used for testing)
+    const detailLines = [];
+    detailLines.push('--------- MVP Path Details ---------\n');
+    mvp.perStep.forEach((s) => {
+        const layerNoStr = s.code.includes('.') ? s.code.split('.')[0] : s.code;
+        detailLines.push(`Layer ${layerNoStr}:`);
+        detailLines.push(`  - Task ${s.code}: ${safe(s.desc)}`);
+        detailLines.push(`    - P(d): ${s.pDetection}, Location: ${s.location}, Delay Mean: ${s.mean}, Delay SDev: ${s.sdev}`);
+        detailLines.push(`    - Adjust P(d): ${s.AdjustedDetection}, Missed Detection: ${s.MissedDetection}, First Detection: ${s.FirstDetection}`);
+        detailLines.push(`    - Cumulative Delays: ${s.CumulativeDelay}, Cumulative Var: ${s.CumulativeVariance}, True Mean: ${s.TrueMean}, True Var: ${s.TrueVariance}`);
+        detailLines.push(`    - Z-Value: ${s.Z_Value}, Normal Value: ${s.CDF_Probability}, Task Interruption Probability: ${s.TaskProbabilityOfInterruption}`);
+        detailLines.push('');
+    });
+
+    return {
+        pathText: pathLines.join('\n'),
+        mvpDetailsText: detailLines.join('\n'),
+        mvpPInterruption, // float (for %, not raw decimal)
+        mvpPath: mvp.label
+    };
 }
