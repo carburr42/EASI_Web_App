@@ -23,10 +23,9 @@ function AdjustedProbabilityOfDetection(PD, PA, PT) {
     PD = parseFloat(PD) || 0;
     PA = parseFloat(PA) || 1;
     PT = parseFloat(PT) || 1;
-    // Formula/Caluculation
+    // Formula/Calculation
     return PD * PA * PT;
 }
-
 
 // #######   #####################################
 // ## 2 ##   ## Probability of Missed Detection ##
@@ -34,9 +33,9 @@ function AdjustedProbabilityOfDetection(PD, PA, PT) {
 
 // This function calculates the overall probability that an adversary will perform a task without being detected.
 // Calculation/Formula:
-//    i) = Probability of Missed Detection = 1 - Adjusted Probability of Detection
+//    i) Probability of Missed Detection = 1 - Adjusted Probability of Detection
 // For example:
-//    – if AdjustedDetection = 0.75 (80%)
+//    – if AdjustedDetection = 0.75 (75%)
 //      then MissedDetection = 1 - 0.75 = 0.25 (25% Probability of Missed Detection)
 
 function ProbabilityOfMissedDetection(AdjustedDetection) {
@@ -49,7 +48,6 @@ function ProbabilityOfMissedDetection(AdjustedDetection) {
     // Return the Probability of Missed Detection
     return MissedDetection;
 }
-
 
 // #######   #############################################
 // ## 3 ##   ## Probability of First Point of Detection ##
@@ -74,7 +72,6 @@ function FirstPointOfDetection(AdjustedDetection, PreviousPoMD) {
     return FirstDetection;
 }
 
-
 // #######   #####################################
 // ## 4 ##   ## Cumulative Delay Time (Seconds) ##
 // #######   #####################################
@@ -87,7 +84,7 @@ function FirstPointOfDetection(AdjustedDetection, PreviousPoMD) {
 //    i) Cumulative Delay Time = DelayMean + NextCumulativeDelay
 // Note:
 // The logic of this had me stuck for a while as it starts from the last task backwards.
-// This figure basically tells you the delay time at any given task in the adversary path.
+// This figure basically tells you the remaining delay time at any given task in the adversary path.
 // Therefore, the first task has the largest corresponding cumulative delay
 // as the total delay time of the whole path remains.
 // The further down the sequence or adversary path, the less time you have.
@@ -104,12 +101,11 @@ function CalculateCumulativeDelay(DelayMean, NextCumulativeDelay) {
     return CumulativeDelay;
 }
 
-
 // #######   #########################
 // ## 5 ##   ## Cumulative Variance ##
 // #######   #########################
 
-// This function calculates the cumulative variance/variance of all tasks
+// This function calculates the cumulative variance of all tasks
 // In this scenario, variance is the measurement of how much task times can differ from the average
 // Input/parameters:
 //    – Delay_SDev: The Standard Deviation of Delay Time
@@ -129,7 +125,6 @@ function CalculateCumulativeVariance(Delay_SDev, NextCumulativeVariance) {
     return CumulativeVariance;
 }
 
-
 // #######   ###############
 // ## 6 ##   ## True Mean ##
 // #######   ###############
@@ -138,13 +133,13 @@ function CalculateCumulativeVariance(Delay_SDev, NextCumulativeVariance) {
 // This figure is calculated based on the weight assigned to the 'locationTiming' value.
 // Input/parameters:
 //     – locationTiming: At what point during the step are guards notified of the adversary's action?
-//         i) B for Beggining
+//         i) B for Beginning
 //            The "B" value is assigned a weight of 1
-//            If guards are notified at the beginning of an task
+//            If guards are notified at the Beginning of a task
 //            they have the full (1) duration of the task to respond
 //         ii) M for Middle
 //             The "M" value is assigned a weight of 0.5
-//             If guards are notified halfway through of an task
+//             If guards are notified halfway through a task
 //             they only have half (0.5) of the task duration to respond
 //         iii) E for End
 //             The "E" value is assigned a weight of 0
@@ -153,7 +148,7 @@ function CalculateCumulativeVariance(Delay_SDev, NextCumulativeVariance) {
 //     – DelayMean: The average delay (in seconds) for each action/step in the adversary path. 
 //     – NextCumulativeDelay: The cumulative delay time (in seconds) for the next task
 // Formula/Calculation: 
-//     – True Mean = (Weight * Delay Mean) + Next Cumulative Delay
+//     – True Mean = (Location Timing * Delay Mean) + Next Cumulative Delay
 // Note:
 // The logic of this had me stuck for a while as it starts from the last task backwards.
 // This figure basically tells you the delay time at any given task in the adversary path
@@ -182,7 +177,6 @@ function CalculateTrueMean(locationTiming, DelayMean, NextCumulativeDelay) {
     return TrueMean;
 }
 
-
 // #######   ###################
 // ## 7 ##   ## True Variance ##
 // #######   ###################
@@ -191,13 +185,13 @@ function CalculateTrueMean(locationTiming, DelayMean, NextCumulativeDelay) {
 // In this scenario, variance is the measurement of how much task times can differ from the average
 // Input/parameters:
 //     – Timing: At what point during the step are guards notified of the adversary's action?
-//         i) B for Beggining
+//         i) B for Beginning
 //            The "B" value is assigned a weight of 1
-//            If guards are notified at the beginning of an task
+//            If guards are notified at the Beginning of a task
 //            they have the full (1) duration of the task to respond
 //         ii) M for Middle
 //             The "M" value is assigned a weight of 0.5
-//             If guards are notified halfway through of an task
+//             If guards are notified halfway through a task
 //             they only have half (0.5) of the task duration to respond
 //         iii) E for End
 //             The "E" value is assigned a weight of 0
@@ -206,7 +200,7 @@ function CalculateTrueMean(locationTiming, DelayMean, NextCumulativeDelay) {
 //     – Delay_SDev: The Standard Deviation of Delay Time
 //     – NextCumulativeVariance: The cumulative variance time (in seconds) for the next task
 // Formula/Calculation:
-//     – True Variance = ((weight * weight) * (Delay S-Dev * Delay S-Dev)) + Next Cumulative Variance
+//     – True Variance = ((locationTiming * locationTiming) * (Delay S-Dev * Delay S-Dev)) + Next Cumulative Variance
 
 function CalculateTrueVariance(locationTiming, Delay_SDev, NextCumulativeVariance) {
     // "parseFloat" converts the input(s) to a number.
@@ -229,7 +223,6 @@ function CalculateTrueVariance(locationTiming, Delay_SDev, NextCumulativeVarianc
     // Return the True Variance value
     return TrueVariance;
 }
-
 
 // #######   #############
 // ## 8 ##   ## Z Value ##
@@ -263,7 +256,6 @@ function Calculate_Z_Value(TrueMean, TrueVariance, GuardResponseMean, GuardRespo
     // Return Z Value
     return Z_Value;
 }
-
 
 // #######   ##########################
 // ## 9 ##   ## Error Function (erf) ##
@@ -305,7 +297,6 @@ function erf(x) {
     return sign * y;
 }
 
-
 // ########   ##################################
 // ## 10 ##   ## Standard Normal Distribution ##
 // ########   ##################################
@@ -345,248 +336,334 @@ function CalculateTaskProbabilityOfInterruption(FirstDetection, CDF_Probability)
     return TaskProbabilityOfInterruption;
 }
 
-
 // ########   #########################################
 // ## 12 ##   ## Overall Probability of Interruption ##
 // ########   #########################################
 
-// This is the last 'core' function that ties everything together.
-// It calculates the Overall Probability of Interruption.
+// This is the 'core' Probability of Interruption function that ties all the previous math together.
+// It calculates the Overall Probability of Interruption for a singular path.
+//     – SumOfInterruption: The sum of 'TaskProbabilityOfInterruption' for a singular path.
+//     – GuardCommunication: The probability that guards will successfully communicate when a threat/adversary is identified.
+// Calculation/Formula:
+//     i) Overall Probability of Interruption = SumOfInterruption * GuardCommunication
 
 function CalculateOverallProbabilityOfInterruption(SumOfInterruption, GuardCommunication) {
+    // Calculation/Formula
     let OverallProbabilityOfInterruption = SumOfInterruption * GuardCommunication;
+    // Return the Overall Probability of Interruption
     return OverallProbabilityOfInterruption;
 }
 
-// ###################
-// ## MAIN FUNCTION ##
-// ###################
+// ########  ###########################################################################
+// ## 13 ##  ################################## MAIN  ##################################
+// ########  ###########################################################################
 
-function CalculateMVP() {
-    const container = document.getElementById('layersContainer');
-    if (!container) return;
+// The purpose of this section is to:
+//     i) Read all user input from the front end HTML. 
+//     ii) Build a two dimensional (2d) array of tasks. 
+//     iii) Enumerate and determine every possible path within the 2d array. 
+//     iv) Evaluate each path using the EASI algorithm.
+//     v) Return a list of all possible paths ranked from MOST vulnerable (MVP) to LEAST vulnerable. 
 
-    const lines = [];
-    const safe = v => (v === undefined || v === null || String(v).trim() === '' ? '-' : String(v).trim());
-    const toNum = v => {
-        const x = parseFloat(v);
-        return Number.isFinite(x) ? x : 0;
-    };
 
-    // Read 'small table' inputs
-    const smallTable = document.getElementById('smallTable');
-    const stRow = smallTable?.rows?.[0];
+// This is known as an Immediately Invoked Function Expression (IIFE). 
+// The purpose of using this is to avoid pollution within the program. 
+// By invoking the IIFE, all functions and variables remain private. 
 
-    const GuardCommunication = toNum(stRow?.cells?.[0]?.querySelector('input')?.value);
-    const PAssessment = toNum(stRow?.cells?.[1]?.querySelector('input')?.value);
-    const PTransmission = toNum(stRow?.cells?.[2]?.querySelector('input')?.value);
-    const GuardResponseMean = toNum(stRow?.cells?.[3]?.querySelector('input')?.value);
-    const GuardResponse_SDev = toNum(stRow?.cells?.[4]?.querySelector('input')?.value);
+(function () {
 
-    // Collect layers from Document Object Model (DOM)
-    const layers = container.querySelectorAll('.layer');
+    // *************
+    // ** Helpers **
+    // *************
 
-    // Path Building
-    const paths = [[]]; // start with empty path
-    layers.forEach((layer, idx) => {
-        const layerNo = idx + 1;
-        const taskTables = layer.querySelectorAll('.task-table');
-        const isTaskLayer = taskTables.length > 0;
+    // The lines of code below are helpers that assist with input handling
+    // They essentially make the input safer and easier for JS to handle
+    //     i) safe: this replaces blank/missing values with '-'
+    //            a) '=>' is an arrow function (basically a shorter way to define a function)
+    //            b) If the input is blank/missing (!v) or if it is blank after trimming (String(v).trim() === '')
+    //               return a dash '-' (? '-'). 
+    //               However, if the input is valid, return the trimmed value (: String(v).trim()).
+    //     ii) toNum: this converts any text input to a number (default of 0 if the input is invalid)
+    //            a) 'parseFloat(v)' converts the input to a number
+    //            b) 'isFinite(parseFloat(v))' checks whether the number is valid
+    //            c) '? parseFloat(v)' returns the number if it is valid
+    //            d) ': 0' returns the default value 0 if the value/number is invalid
+    //     iii) SelectElement: this selects a singular element.
+    //     iv) Select_ALL_Elements: this selects all matching elements and returns an array. 
+    const safe = v => (!v || String(v).trim() === '' ? '-' : String(v).trim());
+    const toNum = v => (isFinite(parseFloat(v)) ? parseFloat(v) : 0);
+    const SelectElement =  selector => document.querySelector(selector);
+    const Select_All_Elements = selector => Array.from(document.querySelectorAll(selector));
 
-        if (!isTaskLayer) {
-            // Transitional Layer (single fixed task)
-            paths.forEach(p => p.push(`${layerNo}`));
-        } else {
-            // Task Layer (branch per task table)
-            const branched = [];
-            taskTables.forEach((_, tIdx) => {
-                paths.forEach(p => branched.push([...p, `${layerNo}.${tIdx + 1}`]));
+    // ********************************
+    // ** Retrieve Global Parameters **
+    // ********************************
+
+    // This function reads and returns the global input parameters from the HTML table:
+    //     – Probability of Transmission
+    //     – Probability of Assessment
+    //     – Guard Response Mean
+    //     – Guard Response Standard Deviation
+    //
+    //     – Guard Communication <- (below layer inputs)
+
+    function RetrieveGlobalParameters() {
+        // Retrieve the table row containing the global parameters
+        const GlobalRow = SelectElement('#smallTable')?.rows?.[0];
+        // Retrieve Guard Communication
+        const GuardRow = SelectElement('#guardTable')?.rows?.[0];
+        // Return the global parameters as numeric values
+        return {
+            GuardCommunication: toNum(GuardRow?.cells?.[0]?.querySelector('input')?.value),
+            ProbabilityOfTransmission: toNum(GlobalRow?.cells?.[0]?.querySelector('input')?.value) || 1,
+            ProbabilityOfAssessment:  toNum(GlobalRow?.cells?.[1]?.querySelector('input')?.value) || 1,
+            GuardResponseMean:        toNum(GlobalRow?.cells?.[2]?.querySelector('input')?.value),
+            GuardResponseS_Dev:       toNum(GlobalRow?.cells?.[3]?.querySelector('input')?.value)
+        };
+    }
+
+    // *************************************
+    // ** Read a Singular HTML Task Table **
+    // *************************************
+
+    // Read the user input of a singular task table and return the information:
+    //     – Task Header/Task Description
+    //     – Probability of Detection
+    //     – Location/Timing Value
+    //     – Delay Mean
+    //     – Delay Standard Deviation
+
+    function ReadTaskFromTable(Table, Task_ID) {
+        
+        const TaskHeaderInput = Table.querySelector('thead input[type="text"]');
+        const TaskRow = Table.querySelector('tbody tr');
+        
+        return {
+            Task_ID: Task_ID,
+            Task_Description: safe(TaskHeaderInput?.value),
+            PD: toNum(TaskRow?.querySelector('td:nth-child(1) input')?.value),
+            location: (TaskRow?.querySelector('td:nth-child(2) select')?.value || 'B'), 
+            mean: toNum(TaskRow?.querySelector('td:nth-child(3) input')?.value),
+            sdev: toNum(TaskRow?.querySelector('td:nth-child(4) input')?.value)
+        };
+    }
+
+    // ****************************
+    // ** Build a 2-D Task Array **
+    // ****************************
+    
+    function Build_2D_Array() {
+        const layers = Select_All_Elements('.layer');
+        const stages = layers.map((LayerElement, LayerIndex) => {
+            const LayerNumber = LayerIndex + 1;
+            const Tables = Array.from(LayerElement.querySelectorAll('.task-table'));
+            return Tables.map((Table, i, arr) => {
+                const Task_ID = (arr.length > 1) ? `${LayerNumber}.${i + 1}` : `${LayerNumber}`;
+                return ReadTaskFromTable(Table, Task_ID);
             });
-            paths.length = 0;
-            paths.push(...branched);
-        }
-    });
-
-    // Helpers to extract data, per task, from a layer
-    function readTransitionalStep(layerEl, layerNo) {
-        const table = layerEl.querySelector('.transition-table');
-        const headInput = table?.querySelector('thead input[type="text"]');
-        const row = table?.querySelector('tbody tr');
-        const step = {
-            code: `${layerNo}`,
-            desc: safe(headInput?.value),
-            pDetection: toNum(row?.querySelector('td:nth-child(1) input')?.value),
-            location: (row?.querySelector('td:nth-child(2) select')?.value || 'B'),
-            mean: toNum(row?.querySelector('td:nth-child(3) input')?.value),
-            sdev: toNum(row?.querySelector('td:nth-child(4) input')?.value),
-        };
-        return step;
+        });
+        return stages.filter(stage => stage.length > 0);
     }
 
-    function readTaskStep(layerEl, layerNo, taskIndex) {
-        const table = layerEl.querySelectorAll('.task-table')[taskIndex];
-        const headInput = table?.querySelector('thead input[type="text"]');
-        const row = table?.querySelector('tbody tr');
-        const step = {
-            code: `${layerNo}.${taskIndex + 1}`,
-            desc: safe(headInput?.value),
-            pDetection: toNum(row?.querySelector('td:nth-child(1) input')?.value),
-            location: (row?.querySelector('td:nth-child(2) select')?.value || 'B'),
-            mean: toNum(row?.querySelector('td:nth-child(3) input')?.value),
-            sdev: toNum(row?.querySelector('td:nth-child(4) input')?.value),
-        };
-        return step;
+    // *****************************
+    // ** Find all possible paths **
+    // *****************************
+    
+    function Enumerate_Paths(Matrix2D) {
+        const Output_Array = [];
+        (function RecursiveFunction(LayerIndex, SelectedSteps, SelectedTaskIDs) {
+            if (LayerIndex === Matrix2D.length) {
+                Output_Array.push({
+                    steps: SelectedSteps,
+                    label: SelectedTaskIDs.join(' \u2192 ')
+                        });
+                return;
+            }
+            for (let i = 0; i < Matrix2D[LayerIndex].length; i++) {
+                const CurrentStep = Matrix2D[LayerIndex][i];
+                RecursiveFunction(
+                    LayerIndex + 1,
+                    SelectedSteps.concat(CurrentStep),
+                    SelectedTaskIDs.concat(CurrentStep.Task_ID)
+                );
+            }
+        })(0, [], []);
+        return Output_Array;
     }
 
-    // Compute monopath metrics for a concrete path (array of step objects)
-    function computePath(steps) {
-        const n = steps.length;
-
-        // Backward pass (cumulative mean delay)
-        const NextCumulativeDelay_Marker = new Array(n);
-        const CumulativeDelay_Marker = new Array(n);
-        let nextCumDelay = 0;
-        for (let i = n - 1; i >= 0; i--) {
-            NextCumulativeDelay_Marker[i] = nextCumDelay;
-            const cd = CalculateCumulativeDelay(steps[i].mean, nextCumDelay);
-            CumulativeDelay_Marker[i] = cd;
-            nextCumDelay = cd;
+    // *****************************************************
+    // ** Evaluate probabilities/metrics for a given path **
+    // *****************************************************
+    
+    function Evaluate_Path(Steps, GlobalParameters) {
+        const NumberOfSteps = Steps.length;
+        const NextCumDelay = new Array(NumberOfSteps);
+        const CumDelay = new Array(NumberOfSteps);
+        const NextCumVar = new Array(NumberOfSteps);
+        const CumVar = new Array(NumberOfSteps);
+        let TotalDelay = 0;
+        let TotalVariance = 0;
+        
+        for (let i = NumberOfSteps - 1; i >= 0; i--) {
+            NextCumDelay[i] = TotalDelay;
+            NextCumVar[i] = TotalVariance;
+            CumDelay[i] = (TotalDelay = Steps[i].mean + TotalDelay);
+            CumVar[i] = (TotalVariance = (Steps[i].sdev * Steps[i].sdev) + TotalVariance);
         }
-
-        // Backward pass (cumulative variance)
-        const NextCumulativeVariance_Marker = new Array(n);
-        const CumulativeVariance_Marker = new Array(n);
-        let nextCumVar = 0;
-        for (let i = n - 1; i >= 0; i--) {
-            NextCumulativeVariance_Marker[i] = nextCumVar;
-            const cv = CalculateCumulativeVariance(steps[i].sdev, nextCumVar);
-            CumulativeVariance_Marker[i] = cv;
-            nextCumVar = cv;
-        }
-
-        // Forward pass (Missed Detection + Interruption Sum)
-        let PreviousPoMD = 1; // product of missed detections
-        let SumOfInterruption = 0; // sum of task interruptions
-        const perStep = [];
-
-        for (let i = 0; i < n; i++) {
-            const s = steps[i];
-            const AdjustedDetection = AdjustedProbabilityOfDetection(s.pDetection, PAssessment, PTransmission);
+        
+        let PreviousPoMD = 1;
+        let SumOfInt = 0;
+        const PerStep = [];
+        
+        for (let i = 0; i < NumberOfSteps; i++) {
+            const CurrentTask = Steps[i];
+            const AdjustedDetection = AdjustedProbabilityOfDetection(
+                CurrentTask.PD, GlobalParameters.ProbabilityOfAssessment, GlobalParameters.ProbabilityOfTransmission
+            );
             const MissedDetection = ProbabilityOfMissedDetection(AdjustedDetection);
             const FirstDetection = FirstPointOfDetection(AdjustedDetection, PreviousPoMD);
-
-            const NextCumulativeDelay = NextCumulativeDelay_Marker[i];
-            const CumulativeDelay = CumulativeDelay_Marker[i];
-
-            const NextCumulativeVariance = NextCumulativeVariance_Marker[i];
-            const CumulativeVariance = CumulativeVariance_Marker[i];
-
-            const TrueMean = CalculateTrueMean(s.location, s.mean, NextCumulativeDelay);
-            const TrueVariance = CalculateTrueVariance(s.location, s.sdev, NextCumulativeVariance);
-
-            const Z_Value = Calculate_Z_Value(TrueMean, TrueVariance, GuardResponseMean, GuardResponse_SDev);
+            const TrueMean = CalculateTrueMean(CurrentTask.location, CurrentTask.mean, NextCumDelay[i]);
+            const TrueVariance = CalculateTrueVariance(CurrentTask.location, CurrentTask.sdev, NextCumVar[i]);
+            const Z_Value = Calculate_Z_Value(TrueMean, TrueVariance, GlobalParameters.GuardResponseMean, GlobalParameters.GuardResponseS_Dev);
             const CDF_Probability = CumulativeDistributionFunction(Z_Value);
-
             const TaskProbabilityOfInterruption = CalculateTaskProbabilityOfInterruption(FirstDetection, CDF_Probability);
-
-            perStep.push({
-                code: s.code,
-                desc: s.desc,
-                pDetection: s.pDetection,
-                location: s.location,
-                mean: s.mean,
-                sdev: s.sdev,
+            
+            PerStep.push({
+                Task_ID: CurrentTask.Task_ID,
+                Task_Description: CurrentTask.Task_Description,
+                PD: CurrentTask.PD,
+                location: CurrentTask.location,
+                mean: CurrentTask.mean,
+                sdev: CurrentTask.sdev,
                 AdjustedDetection,
                 MissedDetection,
                 FirstDetection,
-                CumulativeDelay,
-                CumulativeVariance,
+                CumulativeDelay: CumDelay[i],
+                CumulativeVariance: CumVar[i],
                 TrueMean,
                 TrueVariance,
                 Z_Value,
                 CDF_Probability,
                 TaskProbabilityOfInterruption
             });
-
             PreviousPoMD *= MissedDetection;
-            SumOfInterruption += TaskProbabilityOfInterruption;
+            SumOfInt += TaskProbabilityOfInterruption;
+        }
+        const OverallProbabilityOfInterruption = CalculateOverallProbabilityOfInterruption(SumOfInt, GlobalParameters.GuardCommunication);
+        return { PerStep, OverallProbabilityOfInterruption };
+    }
+
+    // **********************************
+    // ** Calculate and sort all paths **
+    // **********************************
+    
+    function Calculate_All_Paths() {
+        const GlobalParameters = RetrieveGlobalParameters();
+        const Task_Matrix_2D = Build_2D_Array();
+        if (!Task_Matrix_2D.length) {
+            return {
+                PathText: '',
+                MVP_Details_Text: '',
+                MVP_Probability_Percentage: 0,
+                MVP_Path_Label: '',
+                PathResults: []
+            };
+        }
+        
+        const AllPathCombinations = Enumerate_Paths(Task_Matrix_2D);
+        const PathResults = AllPathCombinations.map(p => {
+            const { PerStep, OverallProbabilityOfInterruption } = Evaluate_Path(p.steps, GlobalParameters);
+            return { ...p, PerStep, pInterrupt: OverallProbabilityOfInterruption };
+        });
+        PathResults.sort((a, b) => a.pInterrupt - b.pInterrupt);
+        const TextLines = [];
+        PathResults.forEach((p, idx) => {
+            const Path_Percentage = (p.pInterrupt * 100).toFixed(6);
+            const MostVulnerable = (idx === 0) ? ' [MVP]' : '';
+            // list all possible paths and P(i)
+            TextLines.push(`path ${idx + 1} p(i) = ${Path_Percentage}%${MostVulnerable}`);
+        });
+        const MostVulnerablePath = PathResults[0];
+        const MVP_Probability_Percentage = Number((MostVulnerablePath.pInterrupt * 100).toFixed(6));
+        const MVP_Details_Text = ['----------- MVP Path Details -----------'].concat(
+            MostVulnerablePath.PerStep.flatMap(s => {
+                const LayerNumber = s.Task_ID.includes('.') ? s.Task_ID.split('.')[0] : s.Task_ID;
+                return [
+                    `Layer ${LayerNumber}:`,
+                    `    – Task: ${s.Task_ID}: ${safe(s.Task_Description)}`,
+                    `    – P(d): ${s.PD}, Location: ${s.location}, Delay Mean: ${s.mean}, Delay SDev: ${s.sdev}`,
+                    `    – Adjusted P(d): ${s.AdjustedDetection}, Missed Detection: ${s.MissedDetection}, First Detection: ${s.FirstDetection}`,
+                    `    – Cumulative Delay(s): ${s.CumulativeDelay}, Cumulative Var: ${s.CumulativeVariance}, True Mean: ${s.TrueMean}, True Var: ${s.TrueVariance}`,
+                    `    – Z-Value: ${s.Z_Value}, Normal Value: ${s.CDF_Probability}, Task Interruption Probability: ${s.TaskProbabilityOfInterruption}`, 
+                    ''
+                ];
+            })
+        ).join('\n');
+        
+        return {
+            PathText: TextLines.join('\n'),
+            MVP_Details_Text,
+            MVP_Probability_Percentage,
+            MVP_Path_Label: MostVulnerablePath.label,
+            PathResults
+        };
+    }
+    
+    // ********************
+    // ** User Interface **
+    // ********************
+    
+    window.Handle_Change = function () {
+        const {
+            PathText,
+            MVP_Details_Text,
+            MVP_Probability_Percentage,
+            MVP_Path_Label
+        } = Calculate_All_Paths() || {};
+        const MVP_Element = SelectElement('#MVPpath');
+        const MVP_Percentage_Element = SelectElement('#EASIresult');
+        const FullPathListElement = SelectElement('#PathList');
+        const MVP_Detail_List = SelectElement('#MVPList');
+        if (MVP_Element) MVP_Element.textContent = String(MVP_Path_Label || '');
+        if (MVP_Percentage_Element) {
+            const n = Number(MVP_Probability_Percentage);
+            MVP_Percentage_Element.textContent = Number.isFinite(n) ? `p(i) = ${n.toFixed(6)}%` : '';
+        }
+        if (FullPathListElement) FullPathListElement.textContent = String(PathText || '');
+        if (MVP_Detail_List) MVP_Detail_List.textContent = String(MVP_Details_Text || '');
+    };
+    document.addEventListener('input', e => { if (e.target && e.target.matches('input,select')) Handle_Change(); });
+    document.addEventListener('change', e => { if (e.target && e.target.matches('input,select')) Handle_Change(); });
+    window.addEventListener('DOMContentLoaded', Handle_Change);
+
+    window.Compute_Selected_Path_Info = function (selectedIDs) {
+    try {
+        const Global = RetrieveGlobalParameters();
+        const Matrix = Build_2D_Array();
+        if (!Array.isArray(selectedIDs) || selectedIDs.length !== Matrix.length) {
+        return { complete: false };
         }
 
-        const OverallProbabilityOfInterruption =
-            CalculateOverallProbabilityOfInterruption(SumOfInterruption, GuardCommunication);
+        const Steps = [];
+        for (let i = 0; i < Matrix.length; i++) {
+        const id = selectedIDs[i];
+        if (!id) return { complete: false };                  // must choose per layer
+        const t = Matrix[i].find(x => x.Task_ID === id);
+        if (!t) return { complete: false };                   // invalid Task_ID
+        Steps.push(t);
+        }
 
-        return { perStep, OverallProbabilityOfInterruption };
-    }
+        // Evaluate the exact path chosen by the user
+        const out = Evaluate_Path(Steps, Global);
 
-    // Build paths from DOM to get Probability of Interruption
-    const evaluatedPaths = paths.map(codeList => {
-
-        // Build steps array in order
-        const steps = [];
-        layers.forEach((layer, idx) => {
-            const layerNo = idx + 1;
-            const isTaskLayer = layer.querySelectorAll('.task-table').length > 0;
-
-            if (!isTaskLayer) {
-                steps.push(readTransitionalStep(layer, layerNo));
-            } else {
-                // Find matching ref for this layer [LAYER-#].[TASK-#]
-                const layerRef = codeList.find(tok => tok.startsWith(`${layerNo}.`));
-                const taskRef = layerRef ? Math.max(1, parseInt(layerRef.split('.')[1], 10)) : 1; // default 1
-                steps.push(readTaskStep(layer, layerNo, taskRef - 1));
-            }
-        });
-
-        const { perStep, OverallProbabilityOfInterruption } = computePath(steps);
         return {
-            label: codeList.join(' -> '),
-            steps,
-            perStep,
-            pInterrupt: OverallProbabilityOfInterruption
+        complete: true,
+        PerStep: out.PerStep,
+        OverallProbabilityOfInterruption: out.OverallProbabilityOfInterruption
         };
-    });
-
-    // Sort by earliest path change (1.1 -> 2.1) -> (1.2 -> 2.1)
-    // and identify Most Vulnerable Path (MVP)
-    let mvpIdx = 0;
-    for (let i = 1; i < evaluatedPaths.length; i++) {
-        if (evaluatedPaths[i].pInterrupt < evaluatedPaths[mvpIdx].pInterrupt) mvpIdx = i;
+    } catch {
+        return { complete: false };
     }
-
-    // List of Paths (each with P(i) % )
-    const pathLines = [];
-    evaluatedPaths.forEach((p, i) => {
-        const pct = (p.pInterrupt * 100).toFixed(6);
-        const tag = (i === mvpIdx) ? ' [MVP]' : '';
-        pathLines.push(`Path ${i + 1}: ${p.label}`);
-        pathLines.push(`Probability of Interruption: ${pct} %${tag}`);
-        pathLines.push('');
-    });
-
-    // MVP Reference
-    const mvp = evaluatedPaths[mvpIdx];
-
-    // MVP Probability of Interruption
-    const mvpPInterruption = Number((mvp.pInterrupt * 100).toFixed(6));
-
-    // MVP Text Print (Used for testing)
-    const detailLines = [];
-    detailLines.push('--------- MVP Path Details ---------\n');
-    mvp.perStep.forEach((s) => {
-        const layerNoStr = s.code.includes('.') ? s.code.split('.')[0] : s.code;
-        detailLines.push(`Layer ${layerNoStr}:`);
-        detailLines.push(`  - Task ${s.code}: ${safe(s.desc)}`);
-        detailLines.push(`    - P(d): ${s.pDetection}, Location: ${s.location}, Delay Mean: ${s.mean}, Delay SDev: ${s.sdev}`);
-        detailLines.push(`    - Adjust P(d): ${s.AdjustedDetection}, Missed Detection: ${s.MissedDetection}, First Detection: ${s.FirstDetection}`);
-        detailLines.push(`    - Cumulative Delays: ${s.CumulativeDelay}, Cumulative Var: ${s.CumulativeVariance}, True Mean: ${s.TrueMean}, True Var: ${s.TrueVariance}`);
-        detailLines.push(`    - Z-Value: ${s.Z_Value}, Normal Value: ${s.CDF_Probability}, Task Interruption Probability: ${s.TaskProbabilityOfInterruption}`);
-        detailLines.push('');
-    });
-
-    return {
-        pathText: pathLines.join('\n'),
-        mvpDetailsText: detailLines.join('\n'),
-        mvpPInterruption, // float (for %, not raw decimal)
-        mvpPath: mvp.label
     };
-}
+    
+})();
