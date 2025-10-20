@@ -666,12 +666,15 @@ function CalculateOverallProbabilityOfInterruption(SumOfInterruption, GuardCommu
     }
     };
     
-    window.addEventListener('DOMContentLoaded', () => {
-        const res = Calculate_All_Paths();
-        const pre = document.createElement('pre');
-        pre.textContent =
-            'P(i)\n' + res.MVP_Details_Text + 
-            '\nOverall Probability of Interruption: ' + res.MVP_Probability_Percentage + '%';
-        document.body.appendChild(pre);
-    });
+    (function () {
+        let pre = null;
+        function dump() {
+            const r = Calculate_All_Paths();
+            if (!pre) { pre = document.createElement('pre'); document.body.appendChild(pre); }
+            pre.textContent = 'P(i)\n' + (r.MVP_Details_Text || '') + '\nOverall Probability of Interruption: ' + (r.MVP_Probability_Percentage ?? '') + '%';
+        }
+        const _old = window.Handle_Change;
+        window.Handle_Change = function () { _old(); dump(); };
+        window.addEventListener('DOMContentLoaded', dump);
+    })();
 })();
