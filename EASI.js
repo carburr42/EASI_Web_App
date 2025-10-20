@@ -252,7 +252,7 @@ function Calculate_Z_Value(TrueMean, TrueVariance, GuardResponseMean, GuardRespo
     //    i) Square Root(GuardResponseVariance + CumulativeVariance)
     let Formula_Division = Math.sqrt(GuardResponseVariance + TrueVariance);
     // Final formula
-    let Z_Value = (TrueMean - GuardResponseMean) / Formula_Division;
+    let Z_Value = (GuardResponseMean - TrueMean) / Formula_Division;
     // Return Z Value
     return Z_Value;
 }
