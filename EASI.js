@@ -311,7 +311,7 @@ function erf(x) {
 
 function CumulativeDistributionFunction(Z_Value) {
     // Calculation/Formula (taken/adapted from MATLAB reference)
-    let CDF_Probability = 0.5 * (1 + erf(Z_Value / Math.sqrt(2)));
+    let CDF_Probability = 0.5 * (1 - erf(Z_Value / Math.sqrt(2)));
     // Return the CDF Value/Probability
     return CDF_Probability;
 }
