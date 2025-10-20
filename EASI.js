@@ -666,4 +666,12 @@ function CalculateOverallProbabilityOfInterruption(SumOfInterruption, GuardCommu
     }
     };
     
+    window.addEventListener('DOMContentLoaded', () => {
+        const res = Calculate_All_Paths();
+        const pre = document.createElement('pre');
+        pre.textContent =
+            'P(i)\n' + res.MVP_Details_Text + 
+            '\nOverall Probability of Interruption: ' + res.MVP_Probability_Percentage + '%';
+        document.body.appendChild(pre);
+    });
 })();
