@@ -308,6 +308,9 @@ function erf(x) {
 //    i) (1/2)*(1+erf(x/sqrt(2)))
 //        ii) MATLAB Reference:
 //            iii) https://www.mathworks.com/help/matlab/ref/erf.html
+// We have to use (1 - erf(...)) instead of (1 + erf(...)) due to the Z - Value.
+// The way the Z value is calculated means that a negative value indicates the guard is faster. 
+// Therefore we need to 'flip the curve' to match this logic.
 
 function CumulativeDistributionFunction(Z_Value) {
     // Calculation/Formula (taken/adapted from MATLAB reference)
@@ -665,16 +668,4 @@ function CalculateOverallProbabilityOfInterruption(SumOfInterruption, GuardCommu
         return { complete: false };
     }
     };
-    
-    (function () {
-        let pre = null;
-        function dump() {
-            const r = Calculate_All_Paths();
-            if (!pre) { pre = document.createElement('pre'); document.body.appendChild(pre); }
-            pre.textContent = 'P(i)\n' + (r.MVP_Details_Text || '') + '\nOverall Probability of Interruption: ' + (r.MVP_Probability_Percentage ?? '') + '%';
-        }
-        const _old = window.Handle_Change;
-        window.Handle_Change = function () { _old(); dump(); };
-        window.addEventListener('DOMContentLoaded', dump);
-    })();
 })();
